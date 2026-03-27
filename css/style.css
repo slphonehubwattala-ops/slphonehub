@@ -760,3 +760,24 @@ footer {
         max-height: 80vh !important;
     }
 }
+
+/* --- LOADING SKELETON FIX --- */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.02) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.img-loading {
+    filter: blur(10px);
+    transition: filter 0.4s ease-in-out;
+}
+
+.img-loaded {
+    filter: blur(0);
+}
