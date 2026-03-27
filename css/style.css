@@ -34,7 +34,6 @@ body {
     left: 0; 
     width: 100%; 
     height: 100%;
-    /* Switched to dark amber/neutral dark tones to match the transparent black look */
     background: radial-gradient(circle at 20% 30%, #171717 0%, transparent 40%),
                 radial-gradient(circle at 80% 70%, #0a0a0a 0%, transparent 40%);
     z-index: -1; 
@@ -92,18 +91,17 @@ body {
     letter-spacing: 1px; 
     display: flex; 
     align-items: center; 
-    gap: 12px; /* Increased gap for the image */
+    gap: 12px; 
     text-decoration: none;
 }
 
-/* Adjusted rule to handle the logo image and fix display issues */
 #navLogo {
     height: 38px; 
     width: auto;
-    display: block; /* Ensures it behaves as a box */
+    display: block; 
     object-fit: contain;
-    background: transparent; /* Removes any default background */
-    border: none; /* Removes any default browser border on broken images */
+    background: transparent; 
+    border: none; 
 }
 
 .logo span { color: var(--accent); }
@@ -483,7 +481,7 @@ h1 span {
 
 .reviews-track {
     display: flex;
-    animation: scrollReviews 30s linear infinite; /* Animation was fixed */
+    animation: scrollReviews 30s linear infinite; 
     gap: 30px;
     width: max-content;
 }
@@ -492,7 +490,6 @@ h1 span {
     animation-play-state: paused;
 }
 
-/* FIX: Changed to percentage for infinite scrolling */
 @keyframes scrollReviews {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); } 
@@ -595,10 +592,16 @@ footer {
     
     .location-details h2 { font-size: 2rem; }
     
+    /* MODIFIED: Forced 2-column grid and adjusted card components for 768px and below */
     #productGrid { 
-        grid-template-columns: repeat(2, 1fr) !important; 
+        grid-template-columns: 1fr 1fr !important; 
         gap: 12px !important; 
     }
+
+    .card-img-wrap { height: 160px; }
+    .card-details h3 { font-size: 0.9rem; }
+    .price-text { font-size: 0.95rem; }
+    .cart-btn { font-size: 0.75rem; padding: 6px; }
 
     .info-grid { grid-template-columns: 1fr; }
     .info-box { min-height: auto; padding: 40px 20px; }
@@ -609,7 +612,13 @@ footer {
 
 @media (max-width: 480px) {
     h1 { font-size: 2rem; }
-    #productGrid { grid-template-columns: 1fr !important; }
+    /* MODIFIED: Kept 2-column grid even on very small screens as requested */
+    #productGrid { 
+        grid-template-columns: 1fr 1fr !important; 
+        gap: 10px !important;
+    }
+    .card-img-wrap { height: 140px; }
+    .card-details { padding: 10px; }
     .navbar { padding: 8px 12px; }
     .logo { font-size: 0.9rem; }
 }
