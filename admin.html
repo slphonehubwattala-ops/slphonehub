@@ -76,7 +76,6 @@
         </div>
     </div>
 
-    <!-- NEW SECTION FOR CLASSIC PHONES -->
     <div id="classics" class="section">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2>Classic Phones List</h2>
@@ -125,7 +124,7 @@
             <div class="input-group"><label>Full Specifications</label><textarea id="pSpecs" rows="3"></textarea></div>
 
             <div class="input-group">
-                <label>Gallery (Click one for Cover)</label>
+                <label>Gallery (Auto-compressed to 60% Quality)</label>
                 <input type="file" id="pFiles" multiple accept="image/*" onchange="handlePImages(this)">
                 <div class="gallery-grid" id="pGallery"></div>
             </div>
@@ -188,11 +187,13 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        // --- AUTOMATIC IMAGE COMPRESSION ---
         function handlePImages(input) {
             const files = Array.from(input.files);
             productImages = [];
+            coverIdx = 0;
             const gallery = document.getElementById('pGallery');
-            gallery.innerHTML = 'Shrinking Images...';
+            gallery.innerHTML = '<p style="color:var(--primary);">⚡ Optimizing Images...</p>';
 
             files.forEach((file, i) => {
                 const reader = new FileReader();
@@ -202,22 +203,35 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const maxWidth = 800;
-                        const scale = maxWidth / img.width;
-                        canvas.width = maxWidth;
-                        canvas.height = img.height * scale;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const b64 = canvas.toDataURL('image/jpeg', 0.7);
-                        productImages.push(b64);
-                        if(i === 0) gallery.innerHTML = '';
+
+                        // Optimization Settings
+                        const MAX_WIDTH = 1000; 
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Convert to compressed JPEG (0.6 = 60% quality)
+                        const compressedB64 = canvas.toDataURL('image/jpeg', 0.6);
+                        productImages.push(compressedB64);
+
+                        if(productImages.length === 1) gallery.innerHTML = '';
+                        
                         const item = document.createElement('div');
-                        item.className = `gallery-item ${i === 0 ? 'is-cover' : ''}`;
+                        item.className = `gallery-item ${productImages.length === 1 ? 'is-cover' : ''}`;
                         item.onclick = () => {
                             document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('is-cover'));
                             item.classList.add('is-cover');
-                            coverIdx = i;
+                            coverIdx = productImages.indexOf(compressedB64);
                         };
-                        item.innerHTML = `<img src="${b64}"><div class="cover-badge">COVER</div>`;
+                        item.innerHTML = `<img src="${compressedB64}"><div class="cover-badge">COVER</div>`;
                         gallery.appendChild(item);
                     };
                 };
@@ -232,10 +246,10 @@
             if(!name || !price || productImages.length === 0) return alert("Missing data!");
             
             btn.disabled = true;
-            btn.innerText = "Saving...";
+            btn.innerText = "Syncing with Cloud...";
 
             const prod = {
-                name, brand: document.getElementById('pBrand').value, price,
+                name, brand: document.getElementById('pBrand').value, price: Number(price),
                 category: document.getElementById('pCat').value,
                 condition: document.getElementById('pCond').value,
                 storage: document.getElementById('pStorage').value || 'Standard',
@@ -255,24 +269,22 @@
             } catch (e) {
                 alert("Error: " + e.message);
                 btn.disabled = false;
+                btn.innerText = "Save Product";
             }
         }
 
         async function deleteItem(collection, id) {
-            if(!confirm("Delete?")) return;
+            if(!confirm("Are you sure you want to delete this?")) return;
             await db.collection(collection).doc(id).delete();
-            location.reload();
         }
 
         function init() {
             db.collection("phones").orderBy("createdAt", "desc").onSnapshot(snap => {
                 const allProds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
                 
-                // Update stats
                 document.getElementById('totalP').innerText = allProds.length;
                 document.getElementById('prodTitle').innerText = `Products (${allProds.length})`;
                 
-                // Render ALL PRODUCTS table
                 document.getElementById('prodTable').innerHTML = allProds.map(p => `
                     <tr>
                         <td><img src="${p.cover}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
@@ -280,11 +292,10 @@
                         <td>${p.category}</td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
-                        <td><span style="color:${p.inStock ? 'green' : 'red'}">${p.inStock ? 'In Stock' : 'Out'}</span></td>
-                        <td><button onclick="deleteItem('phones', '${p.id}')">🗑️</button></td>
+                        <td><span style="color:${p.inStock ? '#10b981' : '#ef4444'}">${p.inStock ? 'In Stock' : 'Out'}</span></td>
+                        <td><button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
                     </tr>`).join('');
 
-                // Render CLASSIC PHONES table specifically
                 const classics = allProds.filter(p => p.category === "Classic Phones");
                 document.getElementById('classicTable').innerHTML = classics.length > 0 ? classics.map(p => `
                     <tr>
@@ -292,7 +303,7 @@
                         <td><strong>${p.name}</strong></td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
-                        <td><button onclick="deleteItem('phones', '${p.id}')">🗑️</button></td>
+                        <td><button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
                     </tr>`).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px;">No classic phones added yet.</td></tr>';
             });
         }
