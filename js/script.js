@@ -15,30 +15,34 @@ const db = firebase.firestore();
 
 // Global variables to hold cloud data and current filter state
 let allProducts = [];
-let currentCategory = 'All'; // Track the active category
+let currentCategory = 'All'; 
 
 document.addEventListener('DOMContentLoaded', () => {
     const productGrid = document.getElementById('productGrid');
     const searchInput = document.getElementById('searchInput');
     const categoryButtons = document.querySelectorAll('.cat-filter');
     
-    // 1. REAL-TIME CLOUD DATA LOAD (PHONES)
+    // 1. REAL-TIME CLOUD DATA LOAD
     db.collection("phones").onSnapshot((snapshot) => {
         allProducts = [];
         snapshot.forEach((doc) => {
-            allProducts.push({ id: doc.id, ...doc.data() });
+            const data = doc.data();
+            allProducts.push({ id: doc.id, ...data });
+            
+            // PRE-FETCH: Tell the browser to start downloading these images immediately
+            if (data.cover) {
+                const img = new Image();
+                img.src = data.cover;
+            }
         });
-        applyFilters(); // Unified filter call
+        applyFilters(); 
     });
 
     // 2. CATEGORY FILTER LOGIC
     categoryButtons.forEach(btn => {
         btn.addEventListener('click', () => {
-            // Update UI active state
             categoryButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
-            // Extracts text (e.g., "Smartphones") and ignores emojis for matching
             currentCategory = btn.innerText.replace(/[^a-zA-Z ]/g, "").trim(); 
             applyFilters();
         });
@@ -49,28 +53,29 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.addEventListener('input', applyFilters);
     }
 
-    // NEW: Unified Filter Function (Combines Search + Category)
     function applyFilters() {
         const term = searchInput ? searchInput.value.toLowerCase() : "";
-        
         const filtered = allProducts.filter(p => {
             const matchesSearch = p.name.toLowerCase().includes(term) || 
                                  p.brand.toLowerCase().includes(term);
             const matchesCategory = (currentCategory === 'All') || (p.category === currentCategory);
-            
             return matchesSearch && matchesCategory;
         });
-        
         render(filtered);
     }
 
+    // --- OPTIMIZED RENDER FUNCTION ---
     function render(data) {
         if(!productGrid) return;
         productGrid.innerHTML = data.length ? "" : "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products found.</p>";
         
-        data.forEach(p => {
+        data.forEach((p, index) => {
             const stockColor = p.inStock ? '#10b981' : '#ef4444';
             const safeId = btoa(encodeURIComponent(p.id));
+            
+            // Priority Loading for the first 4 items (the ones visible on screen)
+            const loadingStrategy = index < 4 ? 'eager' : 'lazy';
+            const fetchPriority = index < 4 ? 'high' : 'low';
 
             productGrid.innerHTML += `
                 <div class="card glass-panel" onclick="viewProduct('${safeId}')">
@@ -78,7 +83,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="status-tag" style="background: ${p.condition === 'Used' ? '#4b5563' : '#10b981'}; color:white;">
                             ${p.condition}
                         </span>
-                        <img src="${p.cover}" onerror="this.src='https://via.placeholder.com/300'">
+                        <img src="${p.cover}" 
+                             loading="${loadingStrategy}" 
+                             fetchpriority="${fetchPriority}"
+                             class="img-loading"
+                             onload="this.classList.add('img-loaded')"
+                             onerror="this.src='https://via.placeholder.com/300'">
                     </div>
                     <div class="card-details">
                         <p style="font-size: 0.75rem; color: #3b82f6; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">${p.brand}</p>
@@ -126,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `).join('');
 
-            // Slider Logic
             let index = 0;
             if(cloudReviews.length > 1) {
                 clearInterval(window.reviewInterval);
@@ -139,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// POPUP VIEW
+// POPUP VIEW (Unchanged)
 function viewProduct(encodedId) {
     const id = decodeURIComponent(atob(encodedId));
     const p = allProducts.find(item => item.id == id);
