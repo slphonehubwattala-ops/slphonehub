@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SL Phone Hub | Premium Tech Marketplace</title>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
@@ -84,6 +84,22 @@
             outline: none;
         }
 
+        /* NEW CATEGORY STYLES */
+        .cat-filter {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+        .cat-filter.active {
+            background: var(--accent) !important;
+            border-color: var(--accent);
+        }
+
         /* LOCATION MAP STYLES */
         .location-wrapper {
             margin-top: 60px;
@@ -161,7 +177,7 @@
     <nav class="navbar">
         <a href="index.html" class="logo">
            <img src="assets/logo2.jpeg" alt="Logo" id="navLogo">
-            SL Phone <span>HUB</span>
+           SL Phone <span>HUB</span>
         </a>
         <div class="nav-links">
             <a href="#arrivals">📦 Arrivals</a>
@@ -180,6 +196,26 @@
             </div>
         </div>
     </header>
+
+    <section class="container" id="arrivals">
+        <h2 style="font-size: 2rem; margin-bottom: 20px;">Latest Arrivals 🔥</h2>
+        
+        <div class="tabs-container" style="overflow-x: auto; white-space: nowrap; margin-bottom: 20px; padding-bottom: 10px;">
+            <div class="tabs" style="display: inline-flex; gap: 10px;">
+                <button class="cat-filter active" onclick="filterByCategory('all', this)" style="background: var(--accent);">🌐 All</button>
+                <button class="cat-filter" onclick="filterByCategory('Smartphones', this)" style="background: var(--glass);">📱 Smartphones</button>
+                <button class="cat-filter" onclick="filterByCategory('Classic Phones', this)" style="background: var(--glass);">☎️ Classics</button>
+                <button class="cat-filter" onclick="filterByCategory('Smart Watches', this)" style="background: var(--glass);">⌚ Watches</button>
+                <button class="cat-filter" onclick="filterByCategory('Accessories', this)" style="background: var(--glass);">🎧 Accessories</button>
+                <button class="cat-filter" onclick="filterByCategory('Repair Parts', this)" style="background: var(--glass);">🛠️ Parts</button>
+                <button class="cat-filter" onclick="filterByCategory('Tablets', this)" style="background: var(--glass);">📟 Tablets</button>
+            </div>
+        </div>
+
+        <input type="text" id="searchInput" placeholder="Search by model or brand...">
+        <div id="productGrid" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
+        </div>
+    </section>
 
     <section class="container">
         <div class="info-grid">
@@ -201,13 +237,6 @@
         </div>
     </section>
 
-    <section class="container" id="arrivals">
-        <h2 style="font-size: 2rem; margin-bottom: 20px;">Latest Arrivals 🔥</h2>
-        <input type="text" id="searchInput" placeholder="Search by model or brand...">
-        <div id="productGrid" class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;">
-            </div>
-    </section>
-
     <section class="container" id="testimonials">
         <h2 style="font-size: 2.5rem; margin-bottom: 20px;">What Our Customers Say 💬</h2>
         <p style="color: var(--text-sub); margin-bottom: 60px;">Join our community of over 5,000 happy customers.</p>
@@ -219,7 +248,7 @@
     </section>
 
     <section class="container" id="location">
-        <div class="glass-panel location-wrapper" style="padding: 0; overflow: hidden; display: grid; grid-template-columns: 1fr 1fr;">
+        <div class="glass-panel location-wrapper" style="padding: 0; overflow: hidden;">
             <div class="map-container" style="height: 450px; position: relative;">
                 <iframe 
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.238463870823!2d79.8894101!3d6.9811654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae2f79014b89d2b%3A0xe43fe37bc4e2d5e0!2s38%20Etampolawatte%20Rd%2C%20Wattala!5e0!3m2!1sen!2slk!4v1710000000000!5m2!1sen!2slk" 
@@ -258,7 +287,7 @@
         </div>
     </section>
 
-    <div class="footer-top">
+    <div class="footer-top container">
         <div class="footer-column">
             <h4>YOUR STORE</h4>
             <a href="#arrivals">BROWSE CATALOG</a>
@@ -307,11 +336,12 @@
         const db = firebase.firestore();
 
         let allProducts = [];
+        let activeCategory = 'all';
 
         // 1. REAL-TIME DATA LOAD
         db.collection("phones").orderBy("createdAt", "desc").onSnapshot(snap => {
             allProducts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderProducts(allProducts);
+            applyFilters();
         });
 
         function renderProducts(products) {
@@ -325,7 +355,7 @@
 
             grid.innerHTML = products.map(p => `
                 <div class="info-box glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "'")})' style="padding:0; overflow:hidden; text-align:left;">
-                    <img src="${p.cover}" style="width:100%; height:200px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/300'">
+                    <img src="${p.cover}" loading="lazy" style="width:100%; height:200px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/300'">
                     <div style="padding:20px;">
                         <span style="font-size:0.7rem; color:var(--accent); text-transform:uppercase; font-weight:700;">${p.brand}</span>
                         <h4 style="margin:5px 0;">${p.name}</h4>
@@ -335,15 +365,29 @@
                 </div>`).join('');
         }
 
-        // 2. SEARCH FUNCTIONALITY
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allProducts.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                p.brand.toLowerCase().includes(term)
-            );
+        // 2. FILTER & SEARCH LOGIC
+        function filterByCategory(cat, btn) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-filter').forEach(b => {
+                b.style.background = 'var(--glass)';
+                b.classList.remove('active');
+            });
+            btn.style.background = 'var(--accent)';
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        function applyFilters() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(term) || p.brand.toLowerCase().includes(term);
+                const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
             renderProducts(filtered);
-        });
+        }
 
         // 3. POPUP LOGIC
         function showPopup(p) {
@@ -353,7 +397,6 @@
             mainImg.src = p.cover;
             galleryDiv.innerHTML = ""; 
             
-            // Add cover as first thumbnail
             const thumbCover = document.createElement('img');
             thumbCover.src = p.cover;
             thumbCover.className = 'thumb-img';
@@ -405,7 +448,7 @@
             track.innerHTML = [...reviewData, ...reviewData].map(r => `
                 <div class="review-card ${r.style}">
                     <i class="fas fa-quote-right quote-icon"></i>
-                    <img src="https://ui-avatars.com/api/?name=${r.name}&background=random&color=fff" class="user-img" alt="${r.name}">
+                    <img src="https://ui-avatars.com/api/?name=${r.name}&background=random&color=fff" class="user-img" alt="${r.name}" loading="lazy">
                     <h4 style="margin: 10px 0 5px 0; color: white;">${r.name}</h4>
                     <p class="review-text">"${r.text}"</p>
                     <div class="review-stars">

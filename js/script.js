@@ -13,12 +13,14 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Global variable to hold cloud data for searching
+// Global variables to hold cloud data and current filter state
 let allProducts = [];
+let currentCategory = 'All'; // Track the active category
 
 document.addEventListener('DOMContentLoaded', () => {
     const productGrid = document.getElementById('productGrid');
     const searchInput = document.getElementById('searchInput');
+    const categoryButtons = document.querySelectorAll('.cat-filter');
     
     // 1. REAL-TIME CLOUD DATA LOAD (PHONES)
     db.collection("phones").onSnapshot((snapshot) => {
@@ -26,8 +28,41 @@ document.addEventListener('DOMContentLoaded', () => {
         snapshot.forEach((doc) => {
             allProducts.push({ id: doc.id, ...doc.data() });
         });
-        render(allProducts);
+        applyFilters(); // Unified filter call
     });
+
+    // 2. CATEGORY FILTER LOGIC
+    categoryButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Update UI active state
+            categoryButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Extracts text (e.g., "Smartphones") and ignores emojis for matching
+            currentCategory = btn.innerText.replace(/[^a-zA-Z ]/g, "").trim(); 
+            applyFilters();
+        });
+    });
+
+    // 3. LIVE SEARCH LOGIC
+    if(searchInput) {
+        searchInput.addEventListener('input', applyFilters);
+    }
+
+    // NEW: Unified Filter Function (Combines Search + Category)
+    function applyFilters() {
+        const term = searchInput ? searchInput.value.toLowerCase() : "";
+        
+        const filtered = allProducts.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(term) || 
+                                 p.brand.toLowerCase().includes(term);
+            const matchesCategory = (currentCategory === 'All') || (p.category === currentCategory);
+            
+            return matchesSearch && matchesCategory;
+        });
+        
+        render(filtered);
+    }
 
     function render(data) {
         if(!productGrid) return;
@@ -64,19 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. LIVE SEARCH LOGIC
-    if(searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allProducts.filter(p => 
-                p.name.toLowerCase().includes(term) || 
-                p.brand.toLowerCase().includes(term)
-            );
-            render(filtered);
-        });
-    }
-
-    // 3. REAL-TIME CLOUD REVIEWS LOAD
+    // 4. REAL-TIME CLOUD REVIEWS LOAD
     const track = document.getElementById('reviewTrack');
     if(track) {
         db.collection("reviews").onSnapshot((snapshot) => {
