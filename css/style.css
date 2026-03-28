@@ -126,7 +126,7 @@ body {
     justify-content: center; 
     padding: 120px 20px 60px; 
     background: linear-gradient(rgba(3, 7, 18, 0.6), rgba(3, 7, 18, 0.8)), 
-                url('../assets/hero-bg.jpeg'); 
+                url('../assets/hero-bg.jpg'); 
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
