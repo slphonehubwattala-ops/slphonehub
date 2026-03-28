@@ -39,6 +39,7 @@
         .gallery-item.is-cover .cover-badge { display: block; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .btn-logout { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-edit { background: none; border: none; cursor: pointer; margin-right: 10px; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -66,7 +67,7 @@
     <div id="products" class="section active">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 id="prodTitle">Products (0)</h2>
-            <button class="btn-add" onclick="openModal('productModal')">+ Add Product</button>
+            <button class="btn-add" onclick="prepareAdd()">+ Add Product</button>
         </div>
         <div class="table-wrap">
             <table>
@@ -94,9 +95,11 @@
         </div>
     </div>
 
+    <!-- PRODUCT MODAL -->
     <div class="modal" id="productModal">
         <div class="modal-content">
-            <h2 style="margin-bottom: 25px;">Add New Product</h2>
+            <h2 id="modalTitle" style="margin-bottom: 25px;">Add New Product</h2>
+            <input type="hidden" id="editId">
             <div class="grid-2">
                 <div class="input-group"><label>Product Name *</label><input type="text" id="pName" placeholder="iPhone 16 Pro Max"></div>
                 <div class="input-group"><label>Brand</label><input type="text" id="pBrand" placeholder="Apple"></div>
@@ -187,15 +190,67 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // --- AUTOMATIC IMAGE COMPRESSION ---
+        // PREPARE FOR ADDING NEW
+        function prepareAdd() {
+            document.getElementById('editId').value = "";
+            document.getElementById('modalTitle').innerText = "Add New Product";
+            document.getElementById('pName').value = "";
+            document.getElementById('pPrice').value = "";
+            document.getElementById('pDesc').value = "";
+            document.getElementById('pSpecs').value = "";
+            document.getElementById('pGallery').innerHTML = "";
+            productImages = [];
+            openModal('productModal');
+        }
+
+        // PREPARE FOR EDITING
+        async function editProduct(id) {
+            const doc = await db.collection("phones").doc(id).get();
+            if(!doc.exists) return;
+            const data = doc.data();
+
+            document.getElementById('editId').value = id;
+            document.getElementById('modalTitle').innerText = "Edit Product: " + data.name;
+            
+            document.getElementById('pName').value = data.name;
+            document.getElementById('pBrand').value = data.brand;
+            document.getElementById('pCat').value = data.category;
+            document.getElementById('pCond').value = data.condition;
+            document.getElementById('pPrice').value = data.price;
+            document.getElementById('pStorage').value = data.storage;
+            document.getElementById('pStock').value = data.stock;
+            document.getElementById('pDesc').value = data.description;
+            document.getElementById('pSpecs').value = data.specs;
+            document.getElementById('pInStock').checked = data.inStock;
+            document.getElementById('pFeatured').checked = data.featured;
+
+            // Load existing images
+            productImages = data.allImages || [];
+            renderGallery();
+            openModal('productModal');
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('pGallery');
+            gallery.innerHTML = "";
+            productImages.forEach((img, i) => {
+                const item = document.createElement('div');
+                item.className = `gallery-item ${img === productImages[coverIdx] ? 'is-cover' : ''}`;
+                item.onclick = () => {
+                    coverIdx = i;
+                    renderGallery();
+                };
+                item.innerHTML = `<img src="${img}"><div class="cover-badge">COVER</div>`;
+                gallery.appendChild(item);
+            });
+        }
+
         function handlePImages(input) {
             const files = Array.from(input.files);
-            productImages = [];
-            coverIdx = 0;
             const gallery = document.getElementById('pGallery');
-            gallery.innerHTML = '<p style="color:var(--primary);">⚡ Optimizing Images...</p>';
-
-            files.forEach((file, i) => {
+            // Don't clear productImages, just add to it to allow "adding extra images"
+            
+            files.forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
@@ -203,36 +258,15 @@
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-
-                        // Optimization Settings
                         const MAX_WIDTH = 1000; 
                         let width = img.width;
                         let height = img.height;
-
-                        if (width > MAX_WIDTH) {
-                            height *= MAX_WIDTH / width;
-                            width = MAX_WIDTH;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
+                        if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        canvas.width = width; canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
-
-                        // Convert to compressed JPEG (0.6 = 60% quality)
                         const compressedB64 = canvas.toDataURL('image/jpeg', 0.6);
                         productImages.push(compressedB64);
-
-                        if(productImages.length === 1) gallery.innerHTML = '';
-                        
-                        const item = document.createElement('div');
-                        item.className = `gallery-item ${productImages.length === 1 ? 'is-cover' : ''}`;
-                        item.onclick = () => {
-                            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('is-cover'));
-                            item.classList.add('is-cover');
-                            coverIdx = productImages.indexOf(compressedB64);
-                        };
-                        item.innerHTML = `<img src="${compressedB64}"><div class="cover-badge">COVER</div>`;
-                        gallery.appendChild(item);
+                        renderGallery();
                     };
                 };
                 reader.readAsDataURL(file);
@@ -241,8 +275,10 @@
 
         async function saveProduct() {
             const btn = document.getElementById('saveProdBtn');
+            const editId = document.getElementById('editId').value;
             const name = document.getElementById('pName').value;
             const price = document.getElementById('pPrice').value;
+            
             if(!name || !price || productImages.length === 0) return alert("Missing data!");
             
             btn.disabled = true;
@@ -260,11 +296,16 @@
                 featured: document.getElementById('pFeatured').checked,
                 cover: productImages[coverIdx] || productImages[0],
                 allImages: productImages,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             try {
-                await db.collection("phones").add(prod);
+                if(editId) {
+                    await db.collection("phones").doc(editId).update(prod);
+                } else {
+                    prod.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection("phones").add(prod);
+                }
                 location.reload();
             } catch (e) {
                 alert("Error: " + e.message);
@@ -281,7 +322,6 @@
         function init() {
             db.collection("phones").orderBy("createdAt", "desc").onSnapshot(snap => {
                 const allProds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-                
                 document.getElementById('totalP').innerText = allProds.length;
                 document.getElementById('prodTitle').innerText = `Products (${allProds.length})`;
                 
@@ -293,7 +333,10 @@
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
                         <td><span style="color:${p.inStock ? '#10b981' : '#ef4444'}">${p.inStock ? 'In Stock' : 'Out'}</span></td>
-                        <td><button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
+                        <td>
+                            <button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button>
+                            <button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+                        </td>
                     </tr>`).join('');
 
                 const classics = allProds.filter(p => p.category === "Classic Phones");
@@ -303,7 +346,10 @@
                         <td><strong>${p.name}</strong></td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
-                        <td><button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button></td>
+                        <td>
+                            <button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button>
+                            <button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+                        </td>
                     </tr>`).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px;">No classic phones added yet.</td></tr>';
             });
         }
