@@ -184,7 +184,7 @@ h1 span {
 
 /* --- INFO GRID --- */
 .container { 
-    padding: 60px 5% 40px !important; 
+    padding: 0px 5% 40px !important;
 }
 
 .location-wrapper {
@@ -237,7 +237,7 @@ h1 span {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     transition: all 0.3s ease;
-    margin-bottom: 50px;
+    margin-bottom: 1.75rem !important;
     outline: none;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -249,11 +249,144 @@ h1 span {
     transform: translateY(-2px);
 }
 
-/* --- PRODUCTS --- */
+/* --- PRODUCTS (ALIGNED GRID) --- */
 #productGrid { 
     display: grid; 
-    grid-template-columns: repeat(4, 1fr); 
+    grid-template-columns: repeat(4, minmax(0, 1fr)); 
     gap: 20px; 
+    margin-top: 0 !important;
+    align-items: stretch;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* min-width:0 on items lets tracks shrink so the grid stays full-width (no stray gap on the right) */
+#productGrid > * {
+    min-width: 0;
+}
+
+/* --- ARRIVALS: spacing (flex gap beats collapsed margins; .container !important cannot steal footer padding) --- */
+#arrivals.container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    /* .container sets padding-top: 0 !important — breathe between hero / prior block and heading */
+    padding-top: clamp(2.25rem, 6vw, 3.75rem) !important;
+}
+
+#arrivals h2,
+.arrivals-heading {
+    font-size: 2rem;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.arrivals-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    margin: 0;
+    padding-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+    flex-shrink: 0;
+}
+
+#arrivals #searchInput {
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+}
+
+#arrivals #productGrid {
+    margin-top: 0 !important;
+    flex-shrink: 0;
+}
+
+#productGrid .product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+#productGrid .product-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+}
+
+/* Match 4:5 portrait source assets; height grows with card width */
+.product-card__media {
+    flex-shrink: 0;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    height: auto;
+    overflow: hidden;
+    background: #0a0a0a;
+}
+
+.product-card__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+}
+
+.product-card__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 14px 14px 16px;
+    min-height: 0;
+}
+
+.product-card__brand {
+    font-size: 0.7rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.product-card__title {
+    margin: 6px 0 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5em;
+}
+
+.product-card__specs {
+    margin: 8px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--text-sub);
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.product-card__price {
+    margin-top: auto;
+    padding-top: 10px;
+    font-weight: 700;
+    color: white;
+    font-size: 1.05rem;
+    flex-shrink: 0;
 }
 
 .card { 
@@ -261,8 +394,9 @@ h1 span {
     overflow: hidden; 
     transition: transform 0.4s ease, border-color 0.4s ease; 
     display: flex;
-    flex-direction: column;
+    flex-direction: column; 
     cursor: pointer;
+    height: 100%; 
 }
 
 .card:hover { 
@@ -270,23 +404,31 @@ h1 span {
     border-color: var(--accent);
 }
 
+/* UPDATED: FIXED ALIGNMENT BY USING OBJECT-FIT COVER AND REMOVING PADDING */
 .card-img-wrap {
     position: relative;
     width: 100%;
-    height: 220px; 
+    height: 250px; 
     border-bottom: 1px solid var(--glass-border);
-    background: rgba(3, 7, 18, 0.6);
+    background: #0a0a0a; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 0; /* Padding removed to prevent floating offsets */
+    flex-shrink: 0; 
 }
 
 .card img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain; 
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important; /* Changed from 'contain' to ensure uniform orange background alignment */
     transition: transform 0.5s ease;
+    display: block;
 }
 
 .card:hover .card-img-wrap img {
-    transform: scale(1.03);
+    transform: scale(1.05);
 }
 
 .status-tag { 
@@ -311,6 +453,7 @@ h1 span {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    flex-grow: 1; 
 }
 
 .card-details h3 {
@@ -320,12 +463,14 @@ h1 span {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .price-text {
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--accent);
+    margin-top: auto; 
 }
 
 .card-meta {
@@ -417,18 +562,31 @@ h1 span {
 .footer-top {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 40px;
-    padding: 60px 5%;
+    gap: clamp(36px, 4vw, 52px);
+    padding: clamp(4rem, 8vw, 5.5rem) 5% clamp(4.5rem, 8vw, 5.75rem);
     max-width: 1400px;
-    margin: 80px auto 0;
+    margin: clamp(4rem, 7vw, 5.5rem) auto 0;
     border-top: 1px solid var(--glass-border);
+}
+
+/* .container uses padding !important — without this, footer keeps only 40px bottom padding */
+.footer-top.container {
+    padding-top: clamp(4rem, 8vw, 5.5rem) !important;
+    padding-right: 5% !important;
+    padding-bottom: clamp(4.5rem, 8vw, 5.75rem) !important;
+    padding-left: 5% !important;
+    margin-top: clamp(4rem, 7vw, 5.5rem) !important;
+    margin-bottom: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box;
 }
 
 .footer-column h4 {
     color: white;
     font-size: 0.85rem;
     font-weight: 700;
-    margin-bottom: 25px;
+    margin-bottom: clamp(1.4rem, 2.5vw, 1.75rem);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -438,18 +596,23 @@ h1 span {
     color: var(--text-sub);
     text-decoration: none;
     font-size: 0.75rem;
-    margin-bottom: 12px;
+    margin-bottom: clamp(0.85rem, 1.5vw, 1.05rem);
     transition: 0.3s;
     text-transform: uppercase;
 }
 
 .footer-column a:hover { color: var(--accent); }
 
+.footer-column .footer-subheading {
+    margin-top: 0;
+}
+
 /* --- ENHANCED SOCIAL LINKS --- */
 .social-links { 
     display: flex; 
-    gap: 20px; 
-    margin-top: 10px;
+    gap: clamp(1.1rem, 2vw, 1.35rem); 
+    margin-top: clamp(0.65rem, 1.2vw, 0.85rem);
+    margin-bottom: clamp(1.75rem, 3vw, 2.25rem);
 }
 
 .social-links a {
@@ -564,16 +727,17 @@ h1 span {
 /* --- FOOTER BOTTOM --- */
 footer { 
     text-align: center; 
-    padding: 60px 20px; 
+    padding: 4rem 1.5rem 4.5rem !important; 
     color: var(--text-sub); 
     border-top: 1px solid var(--glass-border); 
-    margin-top: 40px; 
+    margin-top: 2.5rem !important; 
     font-size: 0.9rem;
+    box-sizing: border-box;
 }
 
 /* --- RESPONSIVE FIX --- */
 @media (max-width: 1024px) {
-    #productGrid { grid-template-columns: repeat(3, 1fr); }
+    #productGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .footer-top { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -593,11 +757,51 @@ footer {
     .location-details h2 { font-size: 2rem; }
     
     #productGrid { 
-        grid-template-columns: 1fr 1fr !important; 
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
         gap: 12px !important; 
+        align-items: stretch !important;
+        margin-top: 0 !important;
+        width: 100% !important;
     }
 
-    .card-img-wrap { height: 160px; }
+    /* Symmetric horizontal padding + full-width grid (reduces uneven side gaps on phones) */
+    #arrivals.container {
+        padding-left: max(14px, env(safe-area-inset-left)) !important;
+        padding-right: max(14px, env(safe-area-inset-right)) !important;
+        box-sizing: border-box;
+        gap: 1.5rem !important;
+    }
+
+    .footer-top.container {
+        padding-top: clamp(3rem, 8vw, 4rem) !important;
+        padding-bottom: clamp(3.25rem, 8vw, 4.25rem) !important;
+    }
+
+    .product-card__body {
+        padding: 12px 10px 14px;
+    }
+
+    .product-card__title {
+        font-size: 0.88rem;
+        min-height: 2.45em;
+    }
+
+    .card {
+        height: 100% !important;
+    }
+
+    .card-img-wrap { 
+        height: 160px !important; 
+        width: 100% !important;
+        padding: 0 !important; /* Update for mobile alignment */
+    }
+    
+    .card img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; 
+    }
+
     .card-details h3 { font-size: 0.9rem; }
     .price-text { font-size: 0.95rem; }
     .cart-btn { font-size: 0.75rem; padding: 6px; }
@@ -605,8 +809,20 @@ footer {
     .info-grid { grid-template-columns: 1fr; }
     .info-box { min-height: auto; padding: 40px 20px; }
 
-    .footer-top { grid-template-columns: 1fr; gap: 30px; text-align: center; }
-    .social-links { justify-content: center; }
+    .footer-top {
+        grid-template-columns: 1fr;
+        gap: clamp(2rem, 5vw, 2.75rem);
+        text-align: center;
+    }
+
+    .footer-column h4 {
+        margin-bottom: clamp(1.1rem, 3vw, 1.4rem);
+    }
+
+    .social-links {
+        justify-content: center;
+        margin-bottom: clamp(1.35rem, 4vw, 1.85rem);
+    }
 
     /* --- PRODUCT POPUP OPTIMIZATION --- */
     .details-content {
@@ -622,7 +838,6 @@ footer {
         max-width: 100vw;
     }
     
-    /* Perfect Image Fit - No cut-off */
     .details-img {
         width: 100% !important;
         max-width: 100% !important;
@@ -634,7 +849,6 @@ footer {
         flex-shrink: 0;
     }
 
-    /* Fixed WhatsApp Button - Mobile Responsive */
     .whatsapp-btn-modal {
         display: block !important;
         width: 100% !important;
@@ -665,7 +879,6 @@ footer {
         z-index: 1001;
     }
 
-    /* --- MOBILE STUCK ALIGNMENT FIX ( image_8.png ) --- */
     #modalProductDetails, .details-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -689,10 +902,26 @@ footer {
 @media (max-width: 480px) {
     h1 { font-size: 2rem; }
     #productGrid { 
-        grid-template-columns: 1fr 1fr !important; 
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
         gap: 10px !important;
+        width: 100% !important;
     }
-    .card-img-wrap { height: 140px; }
+
+    #arrivals.container {
+        padding-left: max(12px, env(safe-area-inset-left)) !important;
+        padding-right: max(12px, env(safe-area-inset-right)) !important;
+        gap: 1.35rem !important;
+    }
+
+    .arrivals-heading {
+        font-size: 1.65rem;
+    }
+
+    .arrivals-tabs {
+        padding-bottom: 8px;
+    }
+
+    .card-img-wrap { height: 160px !important; }
     .card-details { padding: 10px; }
     .navbar { padding: 8px 12px; }
     
