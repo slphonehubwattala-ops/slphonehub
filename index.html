@@ -8,8 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Firebase removed: products now load from your Ubuntu API -->
 
     <style>
         /* MODAL & POPUP STYLES */
@@ -329,26 +328,28 @@
     </footer>
 
     <script>
-        // --- FIREBASE CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyC3z8u0t1NIq90SUQG3U4Dhbh03HgE4zv8",
-            authDomain: "slphonehub-61c52.firebaseapp.com",
-            projectId: "slphonehub-61c52",
-            storageBucket: "slphonehub-61c52.firebasestorage.app",
-            messagingSenderId: "222686417598",
-            appId: "1:222686417598:web:357de494c2c2f3370e44ef"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        // --- API CONFIG (replace Firebase) ---
+        const API_BASE_URL = "http://192.168.8.137:3000";
 
         let allProducts = [];
         let activeCategory = 'all';
 
-        // 1. REAL-TIME DATA LOAD
-        db.collection("phones").orderBy("createdAt", "desc").onSnapshot(snap => {
-            allProducts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            applyFilters();
-        });
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/phones?category=all&limit=500&offset=0`);
+                const data = await res.json();
+                allProducts = data.items || [];
+                applyFilters();
+            } catch (e) {
+                console.error("Failed to load products:", e);
+                const grid = document.getElementById('productGrid');
+                if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
+            }
+        }
+
+        // Initial load + lightweight refresh (simulates Firebase behavior)
+        loadProducts();
+        setInterval(loadProducts, 30000);
 
         function renderProducts(products) {
             const grid = document.getElementById('productGrid');
