@@ -15,6 +15,7 @@ const db = firebase.firestore();
 // 2. INSTANT-LOAD: Force the browser to remember the data
 db.enablePersistence({synchronizeTabs: true}).catch(() => console.log("Cache active"));
 
+const API_URL = "https://api.slphonehub.com/api";
 let allProducts = [];
 let currentCategory = 'All'; 
 
@@ -23,14 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const categoryButtons = document.querySelectorAll('.cat-filter');
    
-    // 3. LITE-FETCH: Only get the data once if there's no change (Saves speed)
-    db.collection("phones")
-      .orderBy("name", "asc")
-      .onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
-        // This is the "Magic": It checks if data is from Cache (Instant) or Server
-        allProducts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        applyFilters(); 
-    });
+    // Fetch products from your Ubuntu Server via Cloudflare Tunnel
+    fetch(`${API_URL}/phones`)
+      .then(response => response.json())
+      .then(data => {
+        allProducts = data.items || data; // Handle both {items: []} and []
+        applyFilters();
+      })
+      .catch(err => console.error("Error fetching products:", err));
 
     categoryButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -67,10 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
             card.setAttribute("onclick", `viewProduct('${safeId}')`);
 
             // 4. IMAGE HACK: Use 'loading="lazy"' and 'decoding="async"' for instant scrolling
+            // If image is a path like /uploads/..., add the server URL
+            const imageUrl = p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover}`;
+            
             card.innerHTML = `
                 <div class="card-img-wrap">
                     <span class="status-tag" style="background: ${p.condition === 'Used' ? '#4b5563' : '#10b981'}; color:white;">${p.condition}</span>
-                    <img src="${p.cover}" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/300'">
+                    <img src="${imageUrl}" loading="lazy" decoding="async" onerror="this.src='https://via.placeholder.com/300'">
                 </div>
                 <div class="card-details">
                     <p style="font-size: 0.75rem; color: #3b82f6; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">${p.brand}</p>
@@ -119,7 +123,7 @@ function viewProduct(encodedId) {
         <div class="glass-panel" style="max-width:1000px; width:100%; padding:40px; position:relative; display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:40px; color:white; background:#0a0a0a; border:1px solid rgba(255,255,255,0.1); border-radius:24px;">
             <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer;">&times;</button>
             <div>
-                <img id="mainPopupImg" src="${p.cover}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
+                <img id="mainPopupImg" src="${p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover}`}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
             </div>
             <div style="display:flex; flex-direction:column;">
                 <p style="color:#3b82f6; font-weight:bold;">${p.brand} | ${p.condition}</p>

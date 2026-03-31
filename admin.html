@@ -143,8 +143,8 @@
     </div>
 
     <script>
-        // --- API CONFIG (replace Firebase) ---
-        const API_BASE_URL = "http://192.168.8.137:3000";
+        // --- API CONFIG (replaces Firebase) ---
+        const API_BASE_URL = "https://api.slphonehub.com";
 
         let adminToken = localStorage.getItem("adminToken") || "";
         let allProds = [];
@@ -159,8 +159,6 @@
         }
 
         async function urlToDataURL(url) {
-            // Converts an image URL back to base64 so the server can decode it.
-            // This is needed because the server expects base64 in `cover`/`allImages`.
             const res = await fetch(url);
             const blob = await res.blob();
             return await new Promise((resolve, reject) => {
@@ -206,7 +204,6 @@
             }
         }
 
-        // Start when page loads
         ensureAdminThenInit();
 
         function switchTab(id, btn) {
@@ -252,7 +249,7 @@
             document.getElementById('pInStock').checked = data.inStock;
             document.getElementById('pFeatured').checked = data.featured;
 
-            // Load existing images
+            // Load existing images (URLs)
             productImages = data.allImages || [];
             coverIdx = 0;
             if (Array.isArray(productImages) && productImages.length > 0) {
@@ -318,8 +315,7 @@
             btn.innerText = "Syncing with Cloud...";
 
             try {
-                // If we're editing an existing product, `productImages` contains image URLs (not base64).
-                // Convert URLs -> base64 so the server can decode them.
+                // Convert URLs -> base64 when editing existing product
                 let imagesForServer = productImages;
                 const first = imagesForServer[0] || "";
                 const looksLikeBase64 = first.startsWith("data:image/") || first.includes(";base64,");
@@ -358,9 +354,7 @@
                 });
 
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    throw new Error(data.error || data.message || "Request failed");
-                }
+                if (!res.ok) throw new Error(data.error || data.message || "Request failed");
 
                 location.reload();
             } catch (e) {
@@ -392,10 +386,9 @@
                 const res = await fetch(`${API_BASE_URL}/api/phones?category=all&limit=1000&offset=0`);
                 const data = await res.json().catch(() => ({}));
                 allProds = data.items || [];
-
                 document.getElementById('totalP').innerText = allProds.length;
                 document.getElementById('prodTitle').innerText = `Products (${allProds.length})`;
-
+                
                 document.getElementById('prodTable').innerHTML = allProds.map(p => `
                     <tr>
                         <td><img src="${p.cover}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>

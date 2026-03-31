@@ -328,8 +328,8 @@
     </footer>
 
     <script>
-        // --- API CONFIG (replace Firebase) ---
-        const API_BASE_URL = "http://192.168.8.137:3000";
+        // --- API CONFIG (replaces Firebase) ---
+        const API_BASE_URL = "https://api.slphonehub.com";
 
         let allProducts = [];
         let activeCategory = 'all';
@@ -347,7 +347,7 @@
             }
         }
 
-        // Initial load + lightweight refresh (simulates Firebase behavior)
+        // Initial load + refresh
         loadProducts();
         setInterval(loadProducts, 30000);
 
