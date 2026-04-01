@@ -341,7 +341,6 @@
             if (!path) return 'https://via.placeholder.com/300';
             if (path.startsWith('http') || path.startsWith('data:')) return path;
             
-            // Normalize path to ensure it starts with /uploads/
             let normalizedPath = path;
             if (!normalizedPath.startsWith('/')) normalizedPath = '/' + normalizedPath;
             
@@ -349,7 +348,6 @@
                 return `${API_BASE_URL}${normalizedPath}`;
             }
             
-            // Fallback for just filenames
             if (!normalizedPath.includes('/', 1)) {
                 return `${API_BASE_URL}/uploads${normalizedPath}`;
             }
@@ -388,7 +386,7 @@
                 return `
                 <div class="glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
                     <div class="product-card__media">
-                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="" onerror="this.src='https://via.placeholder.com/300'">
+                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
                     </div>
                     <div class="product-card__body">
                         <span class="product-card__brand">${p.brand}</span>
@@ -417,7 +415,7 @@
         function applyFilters() {
             const term = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allProducts.filter(p => {
-                const matchesSearch = p.name.toLowerCase().includes(term) || p.brand.toLowerCase().includes(term);
+                const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
                 return matchesSearch && matchesCategory;
             });
@@ -439,7 +437,7 @@
             thumbCover.onclick = () => { mainImg.src = coverUrl; };
             galleryDiv.appendChild(thumbCover);
 
-            if (p.allImages && p.allImages.length > 0) {
+            if (p.allImages && Array.isArray(p.allImages)) {
                 p.allImages.forEach(imgUrl => {
                     const fullUrl = getImageUrl(imgUrl);
                     if (fullUrl === coverUrl) return; // Skip if it's the cover
