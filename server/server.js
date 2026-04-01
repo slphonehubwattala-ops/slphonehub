@@ -77,6 +77,9 @@ const db = new sqlite3.Database('./slphonehub.db', (err) => {
 
 // Initialize database tables
 db.serialize(() => {
+  // Uncomment the line below if you want to completely reset the database
+  // db.run('DROP TABLE IF EXISTS products');
+  
   // Products table
   db.run(`CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
@@ -89,8 +92,8 @@ db.serialize(() => {
     stock INTEGER DEFAULT 1,
     description TEXT,
     specs TEXT,
-    inStock BOOLEAN DEFAULT 1,
-    featured BOOLEAN DEFAULT 0,
+    inStock INTEGER DEFAULT 1,
+    featured INTEGER DEFAULT 0,
     cover TEXT,
     allImages TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -148,6 +151,37 @@ function verifyToken(req, res, next) {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Emergency Reset Route (Careful!)
+app.get('/api/admin/reset-db', verifyToken, (req, res) => {
+  db.serialize(() => {
+    db.run('DROP TABLE IF EXISTS products', (err) => {
+      if (err) return res.status(500).json({ error: 'Failed to drop table' });
+      
+      db.run(`CREATE TABLE products (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        brand TEXT,
+        category TEXT,
+        condition TEXT,
+        price REAL NOT NULL,
+        storage TEXT,
+        stock INTEGER DEFAULT 1,
+        description TEXT,
+        specs TEXT,
+        inStock INTEGER DEFAULT 1,
+        featured INTEGER DEFAULT 0,
+        cover TEXT,
+        allImages TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`, (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to recreate table' });
+        res.json({ message: 'Database reset successful. Products table recreated.' });
+      });
+    });
+  });
 });
 
 // Get all products with pagination and filtering
@@ -242,7 +276,10 @@ app.post('/api/admin/login', async (req, res) => {
 // Create product (admin only)
 app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
   try {
-    const { name, brand, category, condition, price, storage, stock, description, specs, inStock, featured } = req.body;
+    const { 
+      name, brand, category, condition, price, storage, stock, 
+      description, specs, inStock, featured 
+    } = req.body;
     
     if (!name || !price) {
       return res.status(400).json({ error: 'Name and price are required' });
@@ -263,7 +300,6 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     // Handle JSON body images (application/json)
     if (req.body.allImages) {
       try {
-        // If it's already an array, use it directly. If it's a string, parse it.
         const imageArray = Array.isArray(req.body.allImages) 
           ? req.body.allImages 
           : JSON.parse(req.body.allImages);
@@ -274,7 +310,6 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
         }
       } catch (e) {
         console.error('Error processing images from body:', e.message);
-        // If parsing fails, we might just have a string. Let's try to treat it as a single image
         if (typeof req.body.allImages === 'string' && req.body.allImages.startsWith('data:image')) {
             allImages = [req.body.allImages];
             cover = allImages[0];
@@ -285,30 +320,31 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     const query = `INSERT INTO products (
       id, name, brand, category, condition, price, storage, stock, 
       description, specs, inStock, featured, cover, allImages
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES ($id, $name, $brand, $category, $condition, $price, $storage, $stock, 
+      $description, $specs, $inStock, $featured, $cover, $allImages)`;
     
-    const params = [
-      productId, 
-      name || '', 
-      brand || '', 
-      category || '', 
-      condition || '', 
-      parseFloat(price) || 0, 
-      storage || '', 
-      parseInt(stock) || 1, 
-      description || '', 
-      specs || '',
-      (inStock === 'true' || inStock === true) ? 1 : 0,
-      (featured === 'true' || featured === true) ? 1 : 0,
-      cover || '', 
-      JSON.stringify(allImages)
-    ];
+    const params = {
+      $id: productId,
+      $name: name || '',
+      $brand: brand || '',
+      $category: category || '',
+      $condition: condition || '',
+      $price: parseFloat(price) || 0,
+      $storage: storage || '',
+      $stock: parseInt(stock) || 1,
+      $description: description || '',
+      $specs: specs || '',
+      $inStock: (inStock === 'true' || inStock === true) ? 1 : 0,
+      $featured: (featured === 'true' || featured === true) ? 1 : 0,
+      $cover: cover || '',
+      $allImages: JSON.stringify(allImages)
+    };
     
     db.run(query, params, function(err) {
       if (err) {
         console.error('DATABASE INSERT ERROR:', err.message);
-        console.error('Attempted Data:', { name, price, category });
-        return res.status(500).json({ error: `Failed to create product: ${err.message}` });
+        console.error('Full Error Details:', err);
+        return res.status(500).json({ error: `Database error: ${err.message}` });
       }
       console.log('Product created successfully, ID:', productId);
       
@@ -379,24 +415,33 @@ app.put('/api/phones/:id', verifyToken, upload.array('images', 10), (req, res) =
       }
       
       const query = `UPDATE products SET 
-        name = ?, brand = ?, category = ?, condition = ?, price = ?, 
-        storage = ?, stock = ?, description = ?, specs = ?, 
-        inStock = ?, featured = ?, cover = ?, allImages = ?,
+        name = $name, brand = $brand, category = $category, condition = $condition, price = $price, 
+        storage = $storage, stock = $stock, description = $description, specs = $specs, 
+        inStock = $inStock, featured = $featured, cover = $cover, allImages = $allImages,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?`;
+      WHERE id = $id`;
       
-      const params = [
-        name || '', brand || '', category || '', condition || '', parseFloat(price) || 0, 
-        storage || '', parseInt(stock) || 1, description || '', specs || '',
-        (inStock === 'true' || inStock === true) ? 1 : 0,
-        (featured === 'true' || featured === true) ? 1 : 0,
-        cover || '', JSON.stringify(allImages), id
-      ];
+      const params = {
+        $name: name || '',
+        $brand: brand || '',
+        $category: category || '',
+        $condition: condition || '',
+        $price: parseFloat(price) || 0,
+        $storage: storage || '',
+        $stock: parseInt(stock) || 1,
+        $description: description || '',
+        $specs: specs || '',
+        $inStock: (inStock === 'true' || inStock === true) ? 1 : 0,
+        $featured: (featured === 'true' || featured === true) ? 1 : 0,
+        $cover: cover || '',
+        $allImages: JSON.stringify(allImages),
+        $id: id
+      };
       
       db.run(query, params, function(err) {
         if (err) {
           console.error('Error updating product:', err);
-          return res.status(500).json({ error: 'Failed to update product' });
+          return res.status(500).json({ error: 'Failed to update product: ' + err.message });
         }
         
         // Return updated product
