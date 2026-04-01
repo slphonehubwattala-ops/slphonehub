@@ -10,6 +10,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
+app.set('trust proxy', 1); // Trust Cloudflare proxy
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'slphonehub-secret-key-change-in-production';
 
@@ -253,22 +254,31 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     let cover = '';
     let allImages = [];
     
+    // Check if files were uploaded via multer (multipart/form-data)
     if (req.files && req.files.length > 0) {
       allImages = req.files.map(file => `/uploads/${file.filename}`);
       cover = allImages[0];
     }
     
-    // Handle base64 images from admin panel
+    // Handle JSON body images (application/json)
     if (req.body.allImages) {
       try {
-        const base64Images = JSON.parse(req.body.allImages);
-        if (Array.isArray(base64Images) && base64Images.length > 0) {
-          // For now, store base64 images. In production, save to disk
-          allImages = base64Images;
-          cover = base64Images[0];
+        // If it's already an array, use it directly. If it's a string, parse it.
+        const imageArray = Array.isArray(req.body.allImages) 
+          ? req.body.allImages 
+          : JSON.parse(req.body.allImages);
+          
+        if (Array.isArray(imageArray) && imageArray.length > 0) {
+          allImages = imageArray;
+          cover = req.body.cover || allImages[0];
         }
       } catch (e) {
-        console.error('Error parsing base64 images:', e);
+        console.error('Error processing images from body:', e.message);
+        // If parsing fails, we might just have a string. Let's try to treat it as a single image
+        if (typeof req.body.allImages === 'string' && req.body.allImages.startsWith('data:image')) {
+            allImages = [req.body.allImages];
+            cover = allImages[0];
+        }
       }
     }
     
@@ -278,18 +288,29 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     const params = [
-      productId, name, brand, category, condition, parseFloat(price), 
-      storage, parseInt(stock) || 1, description, specs,
-      inStock === 'true' || inStock === true,
-      featured === 'true' || featured === true,
-      cover, JSON.stringify(allImages)
+      productId, 
+      name || '', 
+      brand || '', 
+      category || '', 
+      condition || '', 
+      parseFloat(price) || 0, 
+      storage || '', 
+      parseInt(stock) || 1, 
+      description || '', 
+      specs || '',
+      (inStock === 'true' || inStock === true) ? 1 : 0,
+      (featured === 'true' || featured === true) ? 1 : 0,
+      cover || '', 
+      JSON.stringify(allImages)
     ];
     
     db.run(query, params, function(err) {
       if (err) {
-        console.error('Error creating product:', err);
-        return res.status(500).json({ error: 'Failed to create product' });
+        console.error('DATABASE INSERT ERROR:', err.message);
+        console.error('Attempted Data:', { name, price, category });
+        return res.status(500).json({ error: `Failed to create product: ${err.message}` });
       }
+      console.log('Product created successfully, ID:', productId);
       
       // Return created product
       db.get('SELECT * FROM products WHERE id = ?', [productId], (err, product) => {
@@ -306,8 +327,8 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
       });
     });
   } catch (error) {
-    console.error('Error in product creation:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('SERVER POST ERROR:', error);
+    res.status(500).json({ error: `Server error: ${error.message}` });
   }
 });
 
@@ -330,23 +351,30 @@ app.put('/api/phones/:id', verifyToken, upload.array('images', 10), (req, res) =
       let cover = existingProduct.cover;
       let allImages = existingProduct.allImages ? JSON.parse(existingProduct.allImages) : [];
       
-      // Handle new uploaded files
+      // Handle new uploaded files (multipart/form-data)
       if (req.files && req.files.length > 0) {
         const newImages = req.files.map(file => `/uploads/${file.filename}`);
         allImages = [...allImages, ...newImages];
         cover = newImages[0];
       }
       
-      // Handle base64 images
+      // Handle JSON body images (application/json)
       if (req.body.allImages) {
         try {
-          const base64Images = JSON.parse(req.body.allImages);
-          if (Array.isArray(base64Images) && base64Images.length > 0) {
-            allImages = base64Images;
-            cover = base64Images[0];
+          const imageArray = Array.isArray(req.body.allImages) 
+            ? req.body.allImages 
+            : JSON.parse(req.body.allImages);
+            
+          if (Array.isArray(imageArray) && imageArray.length > 0) {
+            allImages = imageArray;
+            cover = req.body.cover || allImages[0];
           }
         } catch (e) {
-          console.error('Error parsing base64 images:', e);
+          console.error('Error processing images from body (PUT):', e.message);
+          if (typeof req.body.allImages === 'string' && req.body.allImages.startsWith('data:image')) {
+              allImages = [req.body.allImages];
+              cover = allImages[0];
+          }
         }
       }
       
@@ -358,11 +386,11 @@ app.put('/api/phones/:id', verifyToken, upload.array('images', 10), (req, res) =
       WHERE id = ?`;
       
       const params = [
-        name, brand, category, condition, parseFloat(price), 
-        storage, parseInt(stock) || 1, description, specs,
-        inStock === 'true' || inStock === true,
-        featured === 'true' || featured === true,
-        cover, JSON.stringify(allImages), id
+        name || '', brand || '', category || '', condition || '', parseFloat(price) || 0, 
+        storage || '', parseInt(stock) || 1, description || '', specs || '',
+        (inStock === 'true' || inStock === true) ? 1 : 0,
+        (featured === 'true' || featured === true) ? 1 : 0,
+        cover || '', JSON.stringify(allImages), id
       ];
       
       db.run(query, params, function(err) {
