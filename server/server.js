@@ -77,28 +77,32 @@ const db = new sqlite3.Database('./slphonehub.db', (err) => {
 
 // Initialize database tables
 db.serialize(() => {
-  // Uncomment the line below if you want to completely reset the database
-  // db.run('DROP TABLE IF EXISTS products');
-  
-  // Products table
-  db.run(`CREATE TABLE IF NOT EXISTS products (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    brand TEXT,
-    category TEXT,
-    condition TEXT,
-    price REAL NOT NULL,
-    storage TEXT,
-    stock INTEGER DEFAULT 1,
-    description TEXT,
-    specs TEXT,
-    inStock INTEGER DEFAULT 1,
-    featured INTEGER DEFAULT 0,
-    cover TEXT,
-    allImages TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  // FORCE RESET - DELETE AND RECREATE TO FIX SCHEMA
+  db.run('DROP TABLE IF EXISTS products', (err) => {
+    if (err) console.error('Error dropping products table:', err.message);
+    
+    db.run(`CREATE TABLE products (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      brand TEXT,
+      category TEXT,
+      condition TEXT,
+      price REAL NOT NULL,
+      storage TEXT,
+      stock INTEGER DEFAULT 1,
+      description TEXT,
+      specs TEXT,
+      inStock INTEGER DEFAULT 1,
+      featured INTEGER DEFAULT 0,
+      cover TEXT,
+      allImages TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )`, (err) => {
+      if (err) console.error('Error creating products table:', err.message);
+      else console.log('✅ Products table (re)created with correct schema.');
+    });
+  });
 
   // Admin users table
   db.run(`CREATE TABLE IF NOT EXISTS admin_users (

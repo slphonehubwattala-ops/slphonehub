@@ -325,17 +325,17 @@
 
                 const prod = {
                     name,
-                    brand: document.getElementById('pBrand').value,
-                    price: Number(price),
-                    category: document.getElementById('pCat').value,
-                    condition: document.getElementById('pCond').value,
+                    brand: document.getElementById('pBrand').value || '',
+                    price: Number(price) || 0,
+                    category: document.getElementById('pCat').value || 'Smartphones',
+                    condition: document.getElementById('pCond').value || 'Brand New',
                     storage: document.getElementById('pStorage').value || 'Standard',
-                    stock: document.getElementById('pStock').value,
-                    description: document.getElementById('pDesc').value,
-                    specs: document.getElementById('pSpecs').value,
+                    stock: Number(document.getElementById('pStock').value) || 1,
+                    description: document.getElementById('pDesc').value || '',
+                    specs: document.getElementById('pSpecs').value || '',
                     inStock: document.getElementById('pInStock').checked,
                     featured: document.getElementById('pFeatured').checked,
-                    cover: imagesForServer[coverIdx] || imagesForServer[0],
+                    cover: imagesForServer[coverIdx] || imagesForServer[0] || '',
                     allImages: imagesForServer
                 };
 
