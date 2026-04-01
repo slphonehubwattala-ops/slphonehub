@@ -10,27 +10,31 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-app.set('trust proxy', 1); // Trust Cloudflare proxy
-const PORT = process.env.PORT || 3000;
-const JWT_SECRET = process.env.JWT_SECRET || 'slphonehub-secret-key-change-in-production';
 
-// Security middleware
+// 1. TRUST PROXY MUST BE FIRST (For Cloudflare/Reverse Proxy)
+app.set('trust proxy', 1);
+
+// 2. SECURITY & CORS
 app.use(helmet());
 app.use(cors({
   origin: ['http://localhost:3000', 'https://slphonehub.com', 'https://www.slphonehub.com', 'https://slphonehub.github.io'],
   credentials: true
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
-});
-app.use('/api/', limiter);
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'slphonehub-secret-key-change-in-production';
 
-// Body parsing middleware
+// 3. BODY PARSING
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// 4. RATE LIMITING
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  validate: { trustProxy: false }
+});
+app.use('/api/', limiter);
 
 // Static file serving for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -77,31 +81,27 @@ const db = new sqlite3.Database('./slphonehub.db', (err) => {
 
 // Initialize database tables
 db.serialize(() => {
-  // FORCE RESET - DELETE AND RECREATE TO FIX SCHEMA
-  db.run('DROP TABLE IF EXISTS products', (err) => {
-    if (err) console.error('Error dropping products table:', err.message);
-    
-    db.run(`CREATE TABLE products (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      brand TEXT,
-      category TEXT,
-      condition TEXT,
-      price REAL NOT NULL,
-      storage TEXT,
-      stock INTEGER DEFAULT 1,
-      description TEXT,
-      specs TEXT,
-      inStock INTEGER DEFAULT 1,
-      featured INTEGER DEFAULT 0,
-      cover TEXT,
-      allImages TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`, (err) => {
-      if (err) console.error('Error creating products table:', err.message);
-      else console.log('✅ Products table (re)created with correct schema.');
-    });
+  // Products table (re-create only if needed, but using named parameters is safer)
+  db.run(`CREATE TABLE IF NOT EXISTS products (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    brand TEXT,
+    category TEXT,
+    condition TEXT,
+    price REAL NOT NULL,
+    storage TEXT,
+    stock INTEGER DEFAULT 1,
+    description TEXT,
+    specs TEXT,
+    inStock INTEGER DEFAULT 1,
+    featured INTEGER DEFAULT 0,
+    cover TEXT,
+    allImages TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`, (err) => {
+    if (err) console.error('Error creating products table:', err.message);
+    else console.log('✅ Products table verified.');
   });
 
   // Admin users table
@@ -278,7 +278,7 @@ app.post('/api/admin/login', async (req, res) => {
 });
 
 // Create product (admin only)
-app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
+app.post('/api/phones', verifyToken, upload.array('images', 10), async (req, res) => {
   try {
     const { 
       name, brand, category, condition, price, storage, stock, 
@@ -295,13 +295,13 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     let cover = '';
     let allImages = [];
     
-    // Check if files were uploaded via multer (multipart/form-data)
+    // 1. Process files from multipart/form-data (Multer)
     if (req.files && req.files.length > 0) {
       allImages = req.files.map(file => `/uploads/${file.filename}`);
       cover = allImages[0];
     }
     
-    // Handle JSON body images (application/json)
+    // 2. Process base64 images from JSON body and SAVE THEM TO DISK
     if (req.body.allImages) {
       try {
         const imageArray = Array.isArray(req.body.allImages) 
@@ -309,15 +309,31 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
           : JSON.parse(req.body.allImages);
           
         if (Array.isArray(imageArray) && imageArray.length > 0) {
-          allImages = imageArray;
-          cover = req.body.cover || allImages[0];
+          const savedImagePaths = [];
+          for (let i = 0; i < imageArray.length; i++) {
+            const imgData = imageArray[i];
+            if (imgData.startsWith('data:image')) {
+              // Convert base64 to file
+              const base64Data = imgData.replace(/^data:image\/\w+;base64,/, "");
+              const buffer = Buffer.from(base64Data, 'base64');
+              const extension = imgData.split(';')[0].split('/')[1] || 'jpg';
+              const fileName = `base64-${Date.now()}-${i}.${extension}`;
+              const filePath = path.join(uploadsDir, fileName);
+              
+              fs.writeFileSync(filePath, buffer);
+              savedImagePaths.push(`/uploads/${fileName}`);
+            } else if (imgData.startsWith('/uploads/')) {
+              savedImagePaths.push(imgData);
+            }
+          }
+          
+          if (savedImagePaths.length > 0) {
+            allImages = [...allImages, ...savedImagePaths];
+            if (!cover) cover = allImages[0];
+          }
         }
       } catch (e) {
-        console.error('Error processing images from body:', e.message);
-        if (typeof req.body.allImages === 'string' && req.body.allImages.startsWith('data:image')) {
-            allImages = [req.body.allImages];
-            cover = allImages[0];
-        }
+        console.error('Error processing base64 images:', e.message);
       }
     }
     
@@ -329,17 +345,17 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     
     const params = {
       $id: productId,
-      $name: name || '',
-      $brand: brand || '',
-      $category: category || '',
-      $condition: condition || '',
+      $name: String(name || ''),
+      $brand: String(brand || ''),
+      $category: String(category || ''),
+      $condition: String(condition || ''),
       $price: parseFloat(price) || 0,
-      $storage: storage || '',
+      $storage: String(storage || ''),
       $stock: parseInt(stock) || 1,
-      $description: description || '',
-      $specs: specs || '',
-      $inStock: (inStock === 'true' || inStock === true) ? 1 : 0,
-      $featured: (featured === 'true' || featured === true) ? 1 : 0,
+      $description: String(description || ''),
+      $specs: String(specs || ''),
+      $inStock: (inStock === 'true' || inStock === true || inStock === 1) ? 1 : 0,
+      $featured: (featured === 'true' || featured === true || featured === 1) ? 1 : 0,
       $cover: cover || '',
       $allImages: JSON.stringify(allImages)
     };
@@ -347,23 +363,18 @@ app.post('/api/phones', verifyToken, upload.array('images', 10), (req, res) => {
     db.run(query, params, function(err) {
       if (err) {
         console.error('DATABASE INSERT ERROR:', err.message);
-        console.error('Full Error Details:', err);
         return res.status(500).json({ error: `Database error: ${err.message}` });
       }
-      console.log('Product created successfully, ID:', productId);
+      console.log('✅ Product created successfully:', productId);
       
-      // Return created product
       db.get('SELECT * FROM products WHERE id = ?', [productId], (err, product) => {
         if (err || !product) {
           return res.status(500).json({ error: 'Failed to retrieve created product' });
         }
-        
-        const responseProduct = {
+        res.status(201).json({
           ...product,
-          allImages: product.allImages ? JSON.parse(product.allImages) : []
-        };
-        
-        res.status(201).json(responseProduct);
+          allImages: JSON.parse(product.allImages || '[]')
+        });
       });
     });
   } catch (error) {
