@@ -630,35 +630,37 @@ h1 span {
 .social-links a:hover .fa-instagram { color: #E4405F; text-shadow: 0 0 15px rgba(228, 64, 95, 0.5); }
 .social-links a:hover .fa-whatsapp { color: #25D366; text-shadow: 0 0 15px rgba(37, 211, 102, 0.5); }
 
-/* TESTIMONIALS & REVIEWS */
+/* === TESTIMONIALS & REVIEWS: SCROLLING ANIMATION === */
 .reviews-container {
     width: 100%;
     overflow: hidden;
     position: relative;
     padding: 20px 0;
-    mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+    /* Creates the fade-out effect on the left and right edges */
+    mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
 .reviews-track {
-    display: flex;
+    display: flex; /* This is the key to making it horizontal */
     gap: 20px;
-    width: max-content;
-    animation: scroll 40s linear infinite;
+    width: max-content; /* Ensures the track is wide enough for all reviews */
+    animation: scroll-reviews 40s linear infinite; /* The animation itself */
 }
 
 .reviews-track:hover {
-    animation-play-state: paused;
+    animation-play-state: paused; /* Pauses the scroll on hover */
 }
 
-@keyframes scroll {
+/* Defines the movement of the animation */
+@keyframes scroll-reviews {
     0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-50% - 10px)); }
+    100% { transform: translateX(calc(-50% - 10px)); } /* Moves the track to the left */
 }
 
 .review-card { 
     width: 350px;
-    flex-shrink: 0;
+    flex-shrink: 0; /* Prevents cards from shrinking */
     padding: 25px;
     background: var(--glass);
     border: 1px solid var(--glass-border);
