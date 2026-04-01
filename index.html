@@ -105,6 +105,69 @@
             border-color: var(--accent);
         }
 
+        /* REVIEWS SCROLL ANIMATION */
+        .reviews-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+        }
+        .reviews-track {
+            display: flex;
+            gap: 20px;
+            width: max-content;
+            animation: scroll 40s linear infinite;
+        }
+        .reviews-track:hover {
+            animation-play-state: paused;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-50% - 10px)); }
+        }
+        .review-card {
+            width: 350px;
+            flex-shrink: 0;
+            padding: 25px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            text-align: left;
+            position: relative;
+            transition: 0.3s;
+        }
+        .review-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+        }
+        .quote-icon {
+            position: absolute;
+            top: 20px; right: 20px;
+            font-size: 1.5rem;
+            opacity: 0.1;
+        }
+        .user-img {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            margin-bottom: 15px;
+        }
+        .review-text {
+            font-style: italic;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .review-stars {
+            color: #fbbf24;
+            font-size: 0.8rem;
+        }
+        .style-dark { background: rgba(15, 23, 42, 0.4); }
+        .style-light { background: rgba(255, 255, 255, 0.03); }
+        .style-accent { border-bottom: 3px solid var(--accent); }
+
         /* LOCATION MAP STYLES */
         .location-wrapper {
             margin-top: 60px;
