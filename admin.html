@@ -389,9 +389,11 @@
                 document.getElementById('totalP').innerText = allProds.length;
                 document.getElementById('prodTitle').innerText = `Products (${allProds.length})`;
                 
-                document.getElementById('prodTable').innerHTML = allProds.map(p => `
+                document.getElementById('prodTable').innerHTML = allProds.map(p => {
+                    const imageUrl = p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover}`;
+                    return `
                     <tr>
-                        <td><img src="${p.cover}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
+                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
                         <td><strong>${p.name}</strong></td>
                         <td>${p.category}</td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
@@ -401,12 +403,15 @@
                             <button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button>
                             <button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
                         </td>
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
 
                 const classics = allProds.filter(p => p.category === "Classic Phones");
-                document.getElementById('classicTable').innerHTML = classics.length > 0 ? classics.map(p => `
+                document.getElementById('classicTable').innerHTML = classics.length > 0 ? classics.map(p => {
+                    const imageUrl = p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover}`;
+                    return `
                     <tr>
-                        <td><img src="${p.cover}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
+                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
                         <td><strong>${p.name}</strong></td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
@@ -414,7 +419,8 @@
                             <button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button>
                             <button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
                         </td>
-                    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px;">No classic phones added yet.</td></tr>';
+                    </tr>`;
+                }).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px;">No classic phones added yet.</td></tr>';
             };
 
             load();

@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'slphonehub-secret-key-change-in-pr
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://slphonehub.com', 'https://www.slphonehub.com'],
+  origin: ['http://localhost:3000', 'https://slphonehub.com', 'https://www.slphonehub.com', 'https://slphonehub.github.io'],
   credentials: true
 }));
 
