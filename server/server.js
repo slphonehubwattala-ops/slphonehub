@@ -517,14 +517,12 @@ app.use('*', (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 SL Phone Hub API running on http://localhost:${PORT}`);
-  console.log(`📱 Admin credentials: admin@slphonehub.com / slphonehub123`);
-  console.log(`🔗 API endpoints:`);
-  console.log(`   GET  /api/phones - Get all products`);
-  console.log(`   POST /api/admin/login - Admin login`);
-  console.log(`   POST /api/phones - Create product (auth required)`);
-  console.log(`   PUT  /api/phones/:id - Update product (auth required)`);
-  console.log(`   DELETE /api/phones/:id - Delete product (auth required)`);
+  console.log('--------------------------------------------------');
+  console.log('🚀 SL Phone Hub API - VERSION 2.0 (STABLE)');
+  console.log(`📡 Server running on http://localhost:${PORT}`);
+  console.log('✅ DATABASE: slphonehub.db connected.');
+  console.log('✅ IMAGES: Storage to disk enabled.');
+  console.log('--------------------------------------------------');
 });
 
 // Graceful shutdown
