@@ -1,21 +1,7 @@
-// 1. FAST-CONNECT: Initialize immediately at the top
-const firebaseConfig = {
-  apiKey: "AIzaSyC3z8u0t1NIq90SUQG3U4Dhbh03HgE4zv8",
-  authDomain: "slphonehub-61c52.firebaseapp.com",
-  projectId: "slphonehub-61c52",
-  storageBucket: "slphonehub-61c52.firebasestorage.app",
-  messagingSenderId: "222686417598",
-  appId: "1:222686417598:web:357de494c2c2f3370e44ef",
-  measurementId: "G-213HGB2JZ5"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// 2. INSTANT-LOAD: Force the browser to remember the data
-db.enablePersistence({synchronizeTabs: true}).catch(() => console.log("Cache active"));
-
+// API and Image Configuration
 const API_URL = "https://api.slphonehub.com/api";
+const IMAGE_BASE_URL = "https://api.slphonehub.com";
+
 let allProducts = [];
 let currentCategory = 'All'; 
 
@@ -56,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function render(data) {
         if(!productGrid) return;
-        // Use a DocumentFragment for faster DOM injection
         const fragment = document.createDocumentFragment();
         productGrid.innerHTML = data.length ? "" : "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products found.</p>";
        
@@ -67,9 +52,10 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = "card glass-panel";
             card.setAttribute("onclick", `viewProduct('${safeId}')`);
 
-            // 4. IMAGE HACK: Use 'loading="lazy"' and 'decoding="async"' for instant scrolling
-            // If image is a path like /uploads/..., add the server URL
-            const imageUrl = p.cover && p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover || ''}`;
+            // Corrected Image URL Logic
+            const imageUrl = p.cover && p.cover.startsWith('/uploads/') 
+                ? `${IMAGE_BASE_URL}${p.cover}` 
+                : (p.cover || 'https://via.placeholder.com/300');
             
             card.innerHTML = `
                 <div class="card-img-wrap">
@@ -92,26 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         productGrid.appendChild(fragment);
     }
-
-    // Reviews - Lite version for speed
-    const track = document.getElementById('reviewTrack');
-    if(track) {
-        db.collection("reviews").limit(5).onSnapshot((snap) => {
-            track.innerHTML = snap.docs.map(doc => {
-                const r = doc.data();
-                return `<div class="review-card glass-panel" style="min-width:300px; margin-right:20px;">
-                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-                        ${r.photo ? `<img src="${r.photo}" loading="lazy" style="width:40px; height:40px; border-radius:50%;">` : ''}
-                        <div><h5 style="color:white; margin:0;">${r.name}</h5><div style="color:#f59e0b;">${'★'.repeat(r.stars || 5)}</div></div>
-                    </div>
-                    <p style="font-style:italic; color:#9ca3af; margin:0;">"${r.review || r.text || ''}"</p>
-                </div>`;
-            }).join('');
-        });
-    }
 });
 
-// View and Buy functions remain the same as they are user-triggered (not auto-boot)
 function viewProduct(encodedId) {
     const id = decodeURIComponent(atob(encodedId));
     const p = allProducts.find(item => item.id == id);
@@ -119,11 +87,17 @@ function viewProduct(encodedId) {
     const overlay = document.createElement('div');
     overlay.id = "detailOverlay";
     overlay.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); backdrop-filter:blur(12px); z-index:10000; display:flex; align-items:center; justify-content:center; padding:20px; overflow-y:auto;";
+    
+    // Corrected Image URL Logic for Popup
+    const imageUrl = p.cover && p.cover.startsWith('/uploads/') 
+        ? `${IMAGE_BASE_URL}${p.cover}` 
+        : (p.cover || 'https://via.placeholder.com/300');
+
     overlay.innerHTML = `
         <div class="glass-panel" style="max-width:1000px; width:100%; padding:40px; position:relative; display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:40px; color:white; background:#0a0a0a; border:1px solid rgba(255,255,255,0.1); border-radius:24px;">
             <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer;">&times;</button>
             <div>
-                <img id="mainPopupImg" src="${p.cover && p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover || ''}`}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
+                <img id="mainPopupImg" src="${imageUrl}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
             </div>
             <div style="display:flex; flex-direction:column;">
                 <p style="color:#3b82f6; font-weight:bold;">${p.brand} | ${p.condition}</p>
