@@ -144,7 +144,8 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const API_BASE_URL = "https://api.slphonehub.com";
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
 
         let adminToken = localStorage.getItem("adminToken") || "";
         let allProds = [];
@@ -265,12 +266,17 @@
             gallery.innerHTML = "";
             productImages.forEach((img, i) => {
                 const item = document.createElement('div');
-                item.className = `gallery-item ${img === productImages[coverIdx] ? 'is-cover' : ''}`;
+                const isCover = i === coverIdx;
+                item.className = `gallery-item ${isCover ? 'is-cover' : ''}`;
                 item.onclick = () => {
                     coverIdx = i;
                     renderGallery();
                 };
-                item.innerHTML = `<img src="${img}"><div class="cover-badge">COVER</div>`;
+                
+                // Ensure image URL is correct for preview
+                const displayUrl = img.startsWith('data:image') ? img : (img.startsWith('http') ? img : `${API_BASE_URL}${img}`);
+                
+                item.innerHTML = `<img src="${displayUrl}"><div class="cover-badge">COVER</div>`;
                 gallery.appendChild(item);
             });
         }
@@ -309,20 +315,16 @@
             const name = document.getElementById('pName').value;
             const price = document.getElementById('pPrice').value;
             
-            if(!name || !price || productImages.length === 0) return alert("Missing data!");
+            if(!name || !price || productImages.length === 0) return alert("Missing data (Name, Price, and Image required)!");
             
             btn.disabled = true;
             btn.innerText = "Syncing with Cloud...";
 
             try {
-                // Convert URLs -> base64 when editing existing product
-                let imagesForServer = productImages;
-                const first = imagesForServer[0] || "";
-                const looksLikeBase64 = first.startsWith("data:image/") || first.includes(";base64,");
-                if (!looksLikeBase64) {
-                    imagesForServer = await Promise.all(imagesForServer.map(url => urlToDataURL(url)));
-                }
-
+                // Don't re-convert everything to Base64 if we are just editing.
+                // Only new images (from handlePImages) will be Base64.
+                // Existing images from the server will be paths like /uploads/...
+                
                 const prod = {
                     name,
                     brand: document.getElementById('pBrand').value || '',
@@ -335,8 +337,8 @@
                     specs: document.getElementById('pSpecs').value || '',
                     inStock: document.getElementById('pInStock').checked,
                     featured: document.getElementById('pFeatured').checked,
-                    cover: imagesForServer[coverIdx] || imagesForServer[0] || '',
-                    allImages: imagesForServer
+                    cover: productImages[coverIdx] || productImages[0] || '',
+                    allImages: productImages
                 };
 
                 const url = editId
@@ -354,18 +356,17 @@
                 });
 
                 const data = await res.json().catch(() => ({}));
-                console.log("Server Response:", data); // DEBUG
+                console.log("Server Response:", data);
                 
                 if (!res.ok) {
                     const errorMsg = data.error || data.message || "Request failed";
-                    console.error("Save Error:", errorMsg);
                     throw new Error(errorMsg);
                 }
 
                 alert("Product saved successfully!");
                 location.reload();
             } catch (e) {
-                console.error("Catch Error:", e);
+                console.error("Save Error:", e);
                 alert("Error: " + e.message);
                 btn.disabled = false;
                 btn.innerText = "Save Product";
@@ -416,7 +417,7 @@
 
                 const classics = allProds.filter(p => p.category === "Classic Phones");
                 document.getElementById('classicTable').innerHTML = classics.length > 0 ? classics.map(p => {
-                    const imageUrl = p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover}`;
+                    const imageUrl = p.cover && p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover || ''}`;
                     return `
                     <tr>
                         <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
@@ -424,7 +425,7 @@
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>
                         <td>
-                            <button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button>
+                            <button class="btn-edit" onclick="this.parentElement.parentElement.remove(); editProduct('${p.id}')">✏️</button>
                             <button onclick="deleteItem('phones', '${p.id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
                         </td>
                     </tr>`;
