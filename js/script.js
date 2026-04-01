@@ -3,6 +3,8 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
 const API_URL = `${API_BASE_URL}/api`;
 
+console.log("🚀 API Base URL:", API_BASE_URL);
+
 let allProducts = [];
 let activeCategory = 'all';
 

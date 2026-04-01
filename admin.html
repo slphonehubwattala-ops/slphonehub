@@ -144,8 +144,10 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
+
+        console.log("🚀 API Base URL:", API_BASE_URL);
 
         let adminToken = localStorage.getItem("adminToken") || "";
         let allProds = [];

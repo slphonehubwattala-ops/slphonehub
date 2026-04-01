@@ -330,9 +330,11 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
         const API_URL = `${API_BASE_URL}/api`;
+
+        console.log("🚀 API Base URL:", API_BASE_URL);
 
         let allProducts = [];
         let activeCategory = 'all';
@@ -383,8 +385,10 @@
 
             grid.innerHTML = products.map(p => {
                 const imageUrl = getImageUrl(p.cover);
+                // Safe stringification for the onclick handler
+                const pData = JSON.stringify(p).replace(/'/g, "\\'");
                 return `
-                <div class="glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
+                <div class="glass-panel product-card" onclick='showPopup(${pData})'>
                     <div class="product-card__media">
                         <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
                     </div>
@@ -422,8 +426,8 @@
             renderProducts(filtered);
         }
 
-        // 3. POPUP LOGIC
         function showPopup(p) {
+            console.log("🔍 Opening product:", p);
             const mainImg = document.getElementById('modalMainImg');
             const galleryDiv = document.getElementById('modalGallery');
             
