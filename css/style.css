@@ -936,6 +936,75 @@ footer {
     .whatsapp-btn-modal { font-size: 1rem !important; }
 }
 
+/* --- PAGINATION --- */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 40px;
+    width: 100%;
+    flex-wrap: wrap;
+    padding: 20px 0;
+}
+
+.page-btn {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    color: white;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.page-btn:hover:not(.disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.page-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.page-btn.disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.page-dots {
+    color: var(--text-sub);
+    padding: 0 5px;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .pagination-container {
+        gap: 8px;
+        margin-top: 30px;
+    }
+    .page-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 0.85rem;
+        border-radius: 10px;
+    }
+}
+
 /* --- ANIMATION KEYFRAMES --- */
 @keyframes floatText {
     from { transform: translateX(-15px); filter: hue-rotate(0deg); }

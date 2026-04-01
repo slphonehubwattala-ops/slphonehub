@@ -281,6 +281,7 @@
         <input type="text" id="searchInput" placeholder="Search by model or brand...">
         <div id="productGrid" class="product-grid">
         </div>
+        <div id="pagination" class="pagination-container"></div>
     </section>
 
     <section class="container">
@@ -398,7 +399,10 @@
         console.log("🚀 API Base URL:", API_BASE_URL);
 
         let allProducts = [];
+        let filteredProducts = [];
         let activeCategory = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 12;
 
         function getImageUrl(path) {
             if (!path) return 'https://via.placeholder.com/300';
@@ -435,16 +439,21 @@
         loadProducts();
         setInterval(loadProducts, 30000);
 
-        function renderProducts(products) {
+        function renderProducts() {
             const grid = document.getElementById('productGrid');
             if(!grid) return;
             
-            if (products.length === 0) {
+            if (filteredProducts.length === 0) {
                 grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products currently available.</p>";
+                renderPagination(0);
                 return;
             }
 
-            grid.innerHTML = products.map(p => {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredProducts.slice(startIndex, endIndex);
+
+            grid.innerHTML = paginatedItems.map(p => {
                 const imageUrl = getImageUrl(p.cover);
                 // Safe stringification for the onclick handler
                 const pData = JSON.stringify(p).replace(/'/g, "\\'");
@@ -461,6 +470,62 @@
                     </div>
                 </div>`;
             }).join('');
+
+            renderPagination(filteredProducts.length);
+        }
+
+        function renderPagination(totalItems) {
+            const paginationContainer = document.getElementById('pagination');
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = "";
+                return;
+            }
+
+            let html = "";
+            // Previous button
+            html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i>
+                    </button>`;
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) html += `<span class="page-dots">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span class="page-dots">...</span>`;
+                html += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+
+            // Next button
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>`;
+
+            paginationContainer.innerHTML = html;
+        }
+
+        function changePage(page) {
+            if (page < 1 || page > Math.ceil(filteredProducts.length / itemsPerPage)) return;
+            currentPage = page;
+            renderProducts();
+            document.getElementById('arrivals').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 2. FILTER & SEARCH LOGIC
@@ -479,12 +544,13 @@
 
         function applyFilters() {
             const term = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allProducts.filter(p => {
+            filteredProducts = allProducts.filter(p => {
                 const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
                 return matchesSearch && matchesCategory;
             });
-            renderProducts(filtered);
+            currentPage = 1; // Reset to page 1 on new filter
+            renderProducts();
         }
 
         function showPopup(p) {
