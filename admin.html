@@ -354,10 +354,18 @@
                 });
 
                 const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.error || data.message || "Request failed");
+                console.log("Server Response:", data); // DEBUG
+                
+                if (!res.ok) {
+                    const errorMsg = data.error || data.message || "Request failed";
+                    console.error("Save Error:", errorMsg);
+                    throw new Error(errorMsg);
+                }
 
+                alert("Product saved successfully!");
                 location.reload();
             } catch (e) {
+                console.error("Catch Error:", e);
                 alert("Error: " + e.message);
                 btn.disabled = false;
                 btn.innerText = "Save Product";
