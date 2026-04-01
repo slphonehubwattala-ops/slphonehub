@@ -243,12 +243,9 @@
     </section>
 
     <section class="container" id="testimonials">
-        <h2 style="font-size: 2.5rem; margin-bottom: 20px;">What Our Customers Say 💬</h2>
-        <p style="color: var(--text-sub); margin-bottom: 60px;">Join our community of over 5,000 happy customers.</p>
-        
-        <div class="reviews-container">
-            <div class="reviews-track" id="reviewTrack">
-                </div>
+        <div class="lead-section">
+            <h3>Trusted by 5,000+ Customers</h3>
+            <p>Don't just take our word for it. Here's what our clients have to say.</p>
         </div>
     </section>
 
@@ -327,6 +324,148 @@
         <p>© 2026 SL Phone Hub. Crafted for Excellence.</p>
     </footer>
 
-    <script src="js/script.js"></script>
+    <script>
+        // --- API CONFIG (replaces Firebase) ---
+        const API_BASE_URL = "https://api.slphonehub.com";
+
+        let allProducts = [];
+        let activeCategory = 'all';
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/phones?category=all&limit=500&offset=0`);
+                const data = await res.json();
+                allProducts = data.items || [];
+                applyFilters();
+            } catch (e) {
+                console.error("Failed to load products:", e);
+                const grid = document.getElementById('productGrid');
+                if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
+            }
+        }
+
+        // Initial load + refresh
+        loadProducts();
+        setInterval(loadProducts, 30000);
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productGrid');
+            if(!grid) return;
+            
+            if (products.length === 0) {
+                grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products currently available.</p>";
+                return;
+            }
+
+            grid.innerHTML = products.map(p => `
+                <div class="glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "'")})'>
+                    <div class="product-card__media">
+                        <img class="product-card__img" src="${p.cover}" loading="lazy" alt="" onerror="this.src='https://via.placeholder.com/300'">
+                    </div>
+                    <div class="product-card__body">
+                        <span class="product-card__brand">${p.brand}</span>
+                        <h4 class="product-card__title">${p.name}</h4>
+                        <p class="product-card__specs">${p.storage} • ${p.condition}</p>
+                        <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // 2. FILTER & SEARCH LOGIC
+        function filterByCategory(cat, btn) {
+            activeCategory = cat;
+            document.querySelectorAll('.cat-filter').forEach(b => {
+                b.style.background = 'var(--glass)';
+                b.classList.remove('active');
+            });
+            btn.style.background = 'var(--accent)';
+            btn.classList.add('active');
+            applyFilters();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        function applyFilters() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => {
+                const matchesSearch = p.name.toLowerCase().includes(term) || p.brand.toLowerCase().includes(term);
+                const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
+            renderProducts(filtered);
+        }
+
+        // 3. POPUP LOGIC
+        function showPopup(p) {
+            const mainImg = document.getElementById('modalMainImg');
+            const galleryDiv = document.getElementById('modalGallery');
+            
+            mainImg.src = p.cover;
+            galleryDiv.innerHTML = ""; 
+            
+            const thumbCover = document.createElement('img');
+            thumbCover.src = p.cover;
+            thumbCover.className = 'thumb-img';
+            thumbCover.onclick = () => { mainImg.src = p.cover; };
+            galleryDiv.appendChild(thumbCover);
+
+            if (p.allImages && p.allImages.length > 0) {
+                p.allImages.forEach(imgUrl => {
+                    const thumb = document.createElement('img');
+                    thumb.src = imgUrl;
+                    thumb.className = 'thumb-img';
+                    thumb.onclick = () => { mainImg.src = imgUrl; };
+                    galleryDiv.appendChild(thumb);
+                });
+            }
+
+            document.getElementById('modalBrand').innerText = p.brand;
+            document.getElementById('modalName').innerText = p.name;
+            document.getElementById('modalPrice').innerText = "Rs. " + Number(p.price).toLocaleString();
+            document.getElementById('modalCondition').innerText = p.condition;
+            document.getElementById('modalStorage').innerText = p.storage;
+            document.getElementById('modalDesc').innerText = p.description || "Premium device certified by SL Phone Hub.";
+            document.getElementById('modalSpecs').innerText = p.specs || "Contact us for detailed specifications.";
+            
+            const msg = `Hi SL Phone Hub! 👋 \n\nI'm interested in the ${p.name} (Rs. ${Number(p.price).toLocaleString()}). \n\nIs it still available?`;
+            document.getElementById('modalWA').href = `https://wa.me/94752500097?text=${encodeURIComponent(msg)}`;
+            
+            document.getElementById('productModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePopup() {
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // 4. TESTIMONIALS
+        const reviewData = [
+            { name: "Sahan P.", text: "Very friendly and reliable service! 🙌 I even got a rare phone I couldn't find anywhere else. Highly recommended! ⭐⭐⭐⭐⭐", style: "style-dark" },
+            { name: "Dilshan R.", text: "Received my phone within 20 minutes! ⚡ Super fast delivery and exactly as described! Best in SL! 🇱🇰", style: "style-light" },
+            { name: "Inshaf A.", text: "Trusted seller. 🤝 Paid via bank deposit and received the phone quickly. Excellent communication throughout! 📱", style: "style-accent" },
+            { name: "Kamal W.", text: "Staff helped me choose the perfect phone without any pressure. 💡 Very knowledgeable and friendly guys! 🔥", style: "style-dark" },
+            { name: "Nimal S.", text: "Great customer service and prices are more reasonable than other shops. 💸 Quality is 100% genuine! ✅", style: "style-light" },
+            { name: "Ashan M.", text: "Amazing collection of classic phones! 💎 Genuine products and well maintained. A hidden gem! 🏆", style: "style-accent" }
+        ];
+
+        const track = document.getElementById('reviewTrack');
+        if(track) {
+            track.innerHTML = [...reviewData, ...reviewData].map(r => `
+                <div class="review-card ${r.style}">
+                    <i class="fas fa-quote-right quote-icon"></i>
+                    <img src="https://ui-avatars.com/api/?name=${r.name}&background=random&color=fff" class="user-img" alt="${r.name}" loading="lazy">
+                    <h4 style="margin: 10px 0 5px 0; color: white;">${r.name}</h4>
+                    <p class="review-text">"${r.text}"</p>
+                    <div class="review-stars">
+                        <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+                    </div>
+                </div>`).join('');
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('productModal')) closePopup();
+        }
+    </script>
 </body>
 </html>
