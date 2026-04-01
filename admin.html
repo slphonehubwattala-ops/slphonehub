@@ -144,7 +144,8 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const API_BASE_URL = "https://api.slphonehub.com";
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
 
         let adminToken = localStorage.getItem("adminToken") || "";
         let allProds = [];
@@ -273,9 +274,20 @@
                 };
                 
                 // Ensure image URL is correct for preview
-                const displayUrl = img.startsWith('data:image') ? img : (img.startsWith('http') ? img : `${API_BASE_URL}${img}`);
+                let displayUrl = img;
+                if (typeof img === 'string') {
+                    if (img.startsWith('data:image')) {
+                        displayUrl = img;
+                    } else if (img.startsWith('http')) {
+                        displayUrl = img;
+                    } else if (img.startsWith('/uploads/')) {
+                        displayUrl = `${API_BASE_URL}${img}`;
+                    } else if (!img.includes('/')) {
+                        displayUrl = `${API_BASE_URL}/uploads/${img}`;
+                    }
+                }
                 
-                item.innerHTML = `<img src="${displayUrl}"><div class="cover-badge">COVER</div>`;
+                item.innerHTML = `<img src="${displayUrl}" onerror="this.src='https://via.placeholder.com/100'"><div class="cover-badge">COVER</div>`;
                 gallery.appendChild(item);
             });
         }
