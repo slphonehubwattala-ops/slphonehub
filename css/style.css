@@ -941,82 +941,60 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 15px;
-    margin-top: 60px;
+    gap: 12px;
+    margin: 60px 0;
     width: 100%;
-    flex-wrap: wrap;
-    padding: 40px 0;
 }
 
 .page-btn {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1.5px solid rgba(255, 255, 255, 0.15);
-    color: #cbd5e1; /* slate-300 */
-    width: 58px;
-    height: 58px;
-    border-radius: 12px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: 1.25rem;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    font-weight: 500;
+    font-size: 1.1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .page-btn:hover:not(.disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: white;
-    color: white;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: #f9fafb;
+    border-color: #9ca3af;
+    color: #111827;
 }
 
 .page-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-    box-shadow: 0 10px 40px var(--accent-glow);
-    transform: scale(1.05);
+    background: #1591b5; /* Matching the blue-teal in your image */
+    border-color: #1591b5;
+    color: #ffffff;
 }
 
 .page-btn.disabled {
-    opacity: 0.1;
+    opacity: 0.4;
     cursor: not-allowed;
-    pointer-events: none;
-    border-color: transparent;
+    background: #f3f4f6;
+    color: #9ca3af;
+    border-color: #e5e7eb;
 }
 
 .page-dots {
-    color: #64748b; /* slate-500 */
-    padding: 0 12px;
-    font-size: 1.8rem;
-    letter-spacing: 4px;
-    font-weight: 900;
+    color: #9ca3af;
+    padding: 0 10px;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
 }
 
 @media (max-width: 768px) {
-    .pagination-container {
-        gap: 10px;
-        margin-top: 40px;
-    }
     .page-btn {
-        width: 50px;
-        height: 50px;
-        font-size: 1.1rem;
-        border-radius: 10px;
-    }
-}
-
-@media (max-width: 480px) {
-    .pagination-container {
-        gap: 8px;
-    }
-    .page-btn {
-        width: 44px;
-        height: 44px;
+        width: 42px;
+        height: 42px;
         font-size: 1rem;
     }
 }
