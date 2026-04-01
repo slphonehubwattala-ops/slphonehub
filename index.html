@@ -330,14 +330,36 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const API_BASE_URL = "https://api.slphonehub.com";
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
+        const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
+        const API_URL = `${API_BASE_URL}/api`;
 
         let allProducts = [];
         let activeCategory = 'all';
 
+        function getImageUrl(path) {
+            if (!path) return 'https://via.placeholder.com/300';
+            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            
+            // Normalize path to ensure it starts with /uploads/
+            let normalizedPath = path;
+            if (!normalizedPath.startsWith('/')) normalizedPath = '/' + normalizedPath;
+            
+            if (normalizedPath.startsWith('/uploads/')) {
+                return `${API_BASE_URL}${normalizedPath}`;
+            }
+            
+            // Fallback for just filenames
+            if (!normalizedPath.includes('/', 1)) {
+                return `${API_BASE_URL}/uploads${normalizedPath}`;
+            }
+            
+            return normalizedPath;
+        }
+
         async function loadProducts() {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/phones?category=all&limit=500&offset=0`);
+                const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
                 const data = await res.json();
                 allProducts = data.items || [];
                 applyFilters();
@@ -361,10 +383,12 @@
                 return;
             }
 
-            grid.innerHTML = products.map(p => `
-                <div class="glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "'")})'>
+            grid.innerHTML = products.map(p => {
+                const imageUrl = getImageUrl(p.cover);
+                return `
+                <div class="glass-panel product-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "&apos;")})'>
                     <div class="product-card__media">
-                        <img class="product-card__img" src="${p.cover}" loading="lazy" alt="" onerror="this.src='https://via.placeholder.com/300'">
+                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="" onerror="this.src='https://via.placeholder.com/300'">
                     </div>
                     <div class="product-card__body">
                         <span class="product-card__brand">${p.brand}</span>
@@ -372,7 +396,8 @@
                         <p class="product-card__specs">${p.storage} • ${p.condition}</p>
                         <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         }
 
         // 2. FILTER & SEARCH LOGIC
@@ -404,21 +429,24 @@
             const mainImg = document.getElementById('modalMainImg');
             const galleryDiv = document.getElementById('modalGallery');
             
-            mainImg.src = p.cover;
+            const coverUrl = getImageUrl(p.cover);
+            mainImg.src = coverUrl;
             galleryDiv.innerHTML = ""; 
             
             const thumbCover = document.createElement('img');
-            thumbCover.src = p.cover;
+            thumbCover.src = coverUrl;
             thumbCover.className = 'thumb-img';
-            thumbCover.onclick = () => { mainImg.src = p.cover; };
+            thumbCover.onclick = () => { mainImg.src = coverUrl; };
             galleryDiv.appendChild(thumbCover);
 
             if (p.allImages && p.allImages.length > 0) {
                 p.allImages.forEach(imgUrl => {
+                    const fullUrl = getImageUrl(imgUrl);
+                    if (fullUrl === coverUrl) return; // Skip if it's the cover
                     const thumb = document.createElement('img');
-                    thumb.src = imgUrl;
+                    thumb.src = fullUrl;
                     thumb.className = 'thumb-img';
-                    thumb.onclick = () => { mainImg.src = imgUrl; };
+                    thumb.onclick = () => { mainImg.src = fullUrl; };
                     galleryDiv.appendChild(thumb);
                 });
             }

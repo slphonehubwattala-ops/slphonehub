@@ -144,7 +144,7 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '';
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
 
         let adminToken = localStorage.getItem("adminToken") || "";
@@ -410,10 +410,14 @@
                 document.getElementById('prodTitle').innerText = `Products (${allProds.length})`;
                 
                 document.getElementById('prodTable').innerHTML = allProds.map(p => {
-                    const imageUrl = p.cover && p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover || ''}`;
+                    let imageUrl = p.cover || 'https://via.placeholder.com/100';
+                    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+                        if (!imageUrl.startsWith('/')) imageUrl = '/' + imageUrl;
+                        imageUrl = `${API_BASE_URL}${imageUrl}`;
+                    }
                     return `
                     <tr>
-                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
+                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/40'"></td>
                         <td><strong>${p.name}</strong></td>
                         <td>${p.category}</td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
@@ -428,10 +432,14 @@
 
                 const classics = allProds.filter(p => p.category === "Classic Phones");
                 document.getElementById('classicTable').innerHTML = classics.length > 0 ? classics.map(p => {
-                    const imageUrl = p.cover && p.cover.startsWith('http') ? p.cover : `${API_BASE_URL}${p.cover || ''}`;
+                    let imageUrl = p.cover || 'https://via.placeholder.com/100';
+                    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('data:')) {
+                        if (!imageUrl.startsWith('/')) imageUrl = '/' + imageUrl;
+                        imageUrl = `${API_BASE_URL}${imageUrl}`;
+                    }
                     return `
                     <tr>
-                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;"></td>
+                        <td><img src="${imageUrl}" width="40" height="40" style="border-radius:6px; object-fit:cover;" onerror="this.src='https://via.placeholder.com/40'"></td>
                         <td><strong>${p.name}</strong></td>
                         <td>Rs. ${Number(p.price).toLocaleString()}</td>
                         <td>${p.stock}</td>

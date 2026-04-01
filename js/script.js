@@ -75,11 +75,22 @@ function applyFilters() {
 
 function getImageUrl(path) {
     if (!path) return 'https://via.placeholder.com/300';
-    if (path.startsWith('http')) return path;
-    if (path.startsWith('/uploads/')) return `${API_BASE_URL}${path}`;
-    // If it's just a filename
-    if (!path.includes('/')) return `${API_BASE_URL}/uploads/${path}`;
-    return path;
+    if (path.startsWith('http') || path.startsWith('data:')) return path;
+    
+    // Normalize path to ensure it starts with /uploads/
+    let normalizedPath = path;
+    if (!normalizedPath.startsWith('/')) normalizedPath = '/' + normalizedPath;
+    
+    if (normalizedPath.startsWith('/uploads/')) {
+        return `${API_BASE_URL}${normalizedPath}`;
+    }
+    
+    // Fallback for just filenames
+    if (!normalizedPath.includes('/', 1)) {
+        return `${API_BASE_URL}/uploads${normalizedPath}`;
+    }
+    
+    return normalizedPath;
 }
 
 function renderProducts(products) {
