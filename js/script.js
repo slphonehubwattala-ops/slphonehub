@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 4. IMAGE HACK: Use 'loading="lazy"' and 'decoding="async"' for instant scrolling
             // If image is a path like /uploads/..., add the server URL
-            const imageUrl = p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover}`;
+            const imageUrl = p.cover && p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover || ''}`;
             
             card.innerHTML = `
                 <div class="card-img-wrap">
@@ -123,7 +123,7 @@ function viewProduct(encodedId) {
         <div class="glass-panel" style="max-width:1000px; width:100%; padding:40px; position:relative; display:grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap:40px; color:white; background:#0a0a0a; border:1px solid rgba(255,255,255,0.1); border-radius:24px;">
             <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:20px; right:20px; background:none; border:none; color:white; font-size:3rem; cursor:pointer;">&times;</button>
             <div>
-                <img id="mainPopupImg" src="${p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover}`}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
+                <img id="mainPopupImg" src="${p.cover && p.cover.startsWith('http') ? p.cover : `https://api.slphonehub.com${p.cover || ''}`}" style="width:100%; aspect-ratio:1/1; object-fit:contain; border-radius:15px; background:#111;">
             </div>
             <div style="display:flex; flex-direction:column;">
                 <p style="color:#3b82f6; font-weight:bold;">${p.brand} | ${p.condition}</p>
