@@ -941,58 +941,60 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
-    margin-top: 50px;
+    gap: 15px;
+    margin-top: 60px;
     width: 100%;
     flex-wrap: wrap;
-    padding: 30px 0;
+    padding: 40px 0;
 }
 
 .page-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid var(--glass-border);
-    color: white;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    color: #cbd5e1; /* slate-300 */
+    width: 58px;
+    height: 58px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 1.1rem;
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    font-size: 1.25rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .page-btn:hover:not(.disabled) {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: var(--accent);
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.4), 0 0 10px var(--accent-glow);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: white;
+    color: white;
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 
 .page-btn.active {
     background: var(--accent);
     border-color: var(--accent);
     color: white;
-    box-shadow: 0 0 30px var(--accent-glow);
-    transform: scale(1.1);
+    box-shadow: 0 10px 40px var(--accent-glow);
+    transform: scale(1.05);
 }
 
 .page-btn.disabled {
-    opacity: 0.15;
+    opacity: 0.1;
     cursor: not-allowed;
     pointer-events: none;
     border-color: transparent;
 }
 
 .page-dots {
-    color: var(--text-sub);
-    padding: 0 8px;
-    font-weight: 800;
-    font-size: 1.2rem;
+    color: #64748b; /* slate-500 */
+    padding: 0 12px;
+    font-size: 1.8rem;
+    letter-spacing: 4px;
+    font-weight: 900;
 }
 
 @media (max-width: 768px) {
@@ -1001,10 +1003,10 @@ footer {
         margin-top: 40px;
     }
     .page-btn {
-        width: 46px;
-        height: 46px;
-        font-size: 1rem;
-        border-radius: 12px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.1rem;
+        border-radius: 10px;
     }
 }
 
@@ -1013,9 +1015,9 @@ footer {
         gap: 8px;
     }
     .page-btn {
-        width: 42px;
-        height: 42px;
-        font-size: 0.9rem;
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
     }
 }
 
