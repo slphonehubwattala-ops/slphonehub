@@ -267,21 +267,30 @@ h1 span {
     position: relative;
     padding: 20px 0;
     margin-bottom: 40px;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
 .trending-heading {
-    font-size: 2.2rem;
-    margin-bottom: 30px;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
     display: flex;
-    align-items: center;
-    gap: 15px;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.trending-heading span {
+    font-size: 0.9rem;
+    color: var(--text-sub);
+    font-weight: 400;
 }
 
 .trending-track {
     display: flex;
-    gap: 20px;
+    gap: 15px;
     width: max-content;
-    animation: trending-scroll 30s linear infinite;
+    animation: trending-scroll 45s linear infinite;
+    padding: 10px 0;
 }
 
 .trending-track:hover {
@@ -290,29 +299,45 @@ h1 span {
 
 @keyframes trending-scroll {
     0% { transform: translateX(0); }
-    100% { transform: translateX(calc(-50% - 10px)); }
+    100% { transform: translateX(calc(-50% - 7.5px)); }
 }
 
 .trending-card {
-    width: 300px;
-    flex-shrink: 0;
+    width: 240px !important;
+    flex-shrink: 0 !important;
+}
+
+.trending-card .product-card__media {
+    height: 180px !important;
+}
+
+.trending-card .product-card__title {
+    font-size: 0.85rem !important;
+    min-height: auto !important;
+}
+
+.trending-card .product-card__price {
+    font-size: 0.95rem !important;
 }
 
 .condition-heading {
-    font-size: 2.2rem;
-    margin: 60px 0 30px;
+    font-size: 1.8rem;
+    margin: 60px 0 25px;
     padding-bottom: 15px;
     border-bottom: 1px solid var(--glass-border);
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .condition-heading span {
     color: var(--accent);
-    font-size: 1.2rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 2px;
+    background: rgba(249, 115, 22, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
 }
 
 /* min-width:0 on items lets tracks shrink so the grid stays full-width (no stray gap on the right) */
@@ -360,7 +385,7 @@ h1 span {
     flex-shrink: 0;
 }
 
-#productGrid .product-card {
+#productGrid .product-card, .product-grid .product-card {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -372,7 +397,7 @@ h1 span {
     transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
-#productGrid .product-card:hover {
+#productGrid .product-card:hover, .product-grid .product-card:hover {
     transform: translateY(-4px);
     border-color: var(--accent);
 }
@@ -794,7 +819,7 @@ footer {
     
     .location-details h2 { font-size: 2rem; }
     
-    #productGrid { 
+    #productGrid, .product-grid { 
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
         gap: 12px !important; 
         align-items: stretch !important;

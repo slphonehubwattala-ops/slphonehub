@@ -470,32 +470,19 @@
         setInterval(loadProducts, 30000);
 
         function renderProducts() {
-            // 1. Handle Trending Section (Featured products for marquee)
+            // 1. Handle Trending Section
             const trendingTrack = document.getElementById('trendingTrack');
             if (trendingTrack) {
-                // Filter products marked as featured, or take the latest 10 if none are featured
-                let trendingItems = allProducts.filter(p => p.featured === 1 || p.featured === true);
-                if (trendingItems.length === 0) trendingItems = allProducts.slice(0, 10);
+                // User will manually add these products via admin later
+                // For now, let's keep it empty or show a placeholder if requested
+                // I will clear the auto-injection as requested
+                trendingTrack.innerHTML = ""; 
                 
-                if (trendingItems.length > 0) {
-                    const cards = trendingItems.map(p => {
-                        const imageUrl = getImageUrl(p.cover);
-                        const pData = JSON.stringify(p).replace(/'/g, "\\'");
-                        return `
-                        <div class="glass-panel product-card trending-card" onclick='showPopup(${pData})'>
-                            <div class="product-card__media">
-                                <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
-                            </div>
-                            <div class="product-card__body">
-                                <span class="product-card__brand">${p.brand}</span>
-                                <h4 class="product-card__title">${p.name}</h4>
-                                <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
-                            </div>
-                        </div>`;
-                    }).join('');
-                    trendingTrack.innerHTML = cards + cards; // Double for seamless loop
-                } else {
+                // If it's empty, hide the section
+                if (trendingTrack.innerHTML === "") {
                     document.querySelector('.trending-section').style.display = 'none';
+                } else {
+                    document.querySelector('.trending-section').style.display = 'block';
                 }
             }
 
