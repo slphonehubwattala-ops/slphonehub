@@ -80,28 +80,7 @@
             transition: 0.3s;
         }
         .whatsapp-btn-modal:hover { background: #1eb954; transform: translateY(-2px); }
-        /* PRODUCT GRID LAYOUT FIX */
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 20px;
-            width: 100%;
-            margin-top: 20px;
-        }
-        @media (max-width: 1024px) {
-            .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        }
-        @media (max-width: 768px) {
-            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
-        }
-
-        .product-card { 
-            cursor: pointer; 
-            transition: 0.3s; 
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+        .product-card { cursor: pointer; transition: 0.3s; }
         .product-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .thumb-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
         .thumb-img { 
@@ -150,84 +129,6 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(calc(-50% - 10px)); }
         }
-        
-        /* TRENDING SCROLL ANIMATION */
-        .trending-container {
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-            padding: 20px 0 40px;
-            margin: 0 auto;
-            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-        }
-        .trending-track {
-            display: flex !important;
-            flex-direction: row !important;
-            gap: 20px;
-            width: max-content;
-            animation: scroll-trending 30s linear infinite;
-        }
-        .trending-track:hover {
-            animation-play-state: paused;
-        }
-        @keyframes scroll-trending {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(calc(-50% - 10px)); }
-        }
-        .trending-card {
-            width: 280px !important;
-            flex-shrink: 0 !important;
-            padding: 0;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            text-align: left;
-            position: relative;
-            transition: 0.3s;
-            display: flex !important;
-            flex-direction: column;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .trending-card:hover {
-            border-color: var(--accent);
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-5px);
-        }
-        .trending-img-wrap {
-            width: 100%;
-            height: 220px;
-            overflow: hidden;
-            background: #0a0a0a;
-        }
-        .trending-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: top center;
-            transition: 0.5s;
-        }
-        .trending-card:hover .trending-img {
-            transform: scale(1.05);
-        }
-        .trending-body {
-            padding: 15px;
-        }
-        .trending-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: var(--accent);
-            color: black;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            z-index: 2;
-        }
-
         .review-card {
             width: 350px !important;
             flex-shrink: 0 !important;
@@ -267,7 +168,6 @@
         .style-accent { border-bottom: 4px solid var(--accent) !important; }
 
         /* LOCATION MAP STYLES */
-        .location-wrapper {
             margin-top: 60px;
             border: 1px solid var(--glass-border);
         }
@@ -352,16 +252,6 @@
         </div>
     </nav>
 
-    <section class="container" id="trending" style="display: none; padding-top: 120px !important; padding-bottom: 0 !important;">
-        <h2 style="font-size: 2.2rem; margin-bottom: 10px;">Trending Now 🔥</h2>
-        <p style="color: var(--text-sub); margin-bottom: 30px;">Most wanted gadgets right now.</p>
-        <div class="trending-container">
-            <div class="trending-track" id="trendingTrack">
-                <!-- Trending products injected via script.js -->
-            </div>
-        </div>
-    </section>
-
     <header class="hero">
         <div class="hero-content glass-panel">
             <span class="badge" style="background:var(--accent); color:white; padding:5px 15px; border-radius:20px; font-size:0.7rem;">EST. 2026</span>
@@ -375,34 +265,10 @@
 
     <section class="container" id="arrivals">
         <h2 class="arrivals-heading">Latest Arrivals 🔥</h2>
-        <div id="latestGrid" class="product-grid"></div>
-        <div style="text-align: center; margin-top: 30px;">
-             <button class="cta-btn" onclick="document.getElementById('explore').scrollIntoView()">View All Arrivals</button>
-        </div>
-    </section>
-
-    <section class="container" id="brandNewSection" style="display: none;">
-        <h2 class="arrivals-heading">Brand New ✨</h2>
-        <div id="brandNewGrid" class="product-grid"></div>
-    </section>
-
-    <section class="container" id="refurbishedSection" style="display: none;">
-        <h2 class="arrivals-heading">Certified Refurbished 🛠️</h2>
-        <div id="refurbishedGrid" class="product-grid"></div>
-    </section>
-
-    <section class="container" id="usedSection" style="display: none;">
-        <h2 class="arrivals-heading">Pre-Owned / Used 📱</h2>
-        <div id="usedGrid" class="product-grid"></div>
-    </section>
-
-    <section class="container" id="explore" style="padding-top: 60px !important; border-top: 1px solid var(--glass-border);">
-        <h2 class="arrivals-heading">Explore Everything 🌐</h2>
         
         <div class="tabs-container arrivals-tabs">
             <div class="tabs" style="display: inline-flex; gap: 10px;">
                 <button class="cat-filter active" onclick="filterByCategory('all', this)" style="background: var(--accent);">🌐 All</button>
-                <button class="cat-filter" onclick="filterByCategory('Trending Products', this)" style="background: var(--glass);">🔥 Trending</button>
                 <button class="cat-filter" onclick="filterByCategory('Smartphones', this)" style="background: var(--glass);">📱 Smartphones</button>
                 <button class="cat-filter" onclick="filterByCategory('Classic Phones', this)" style="background: var(--glass);">☎️ Classics</button>
                 <button class="cat-filter" onclick="filterByCategory('Smart Watches', this)" style="background: var(--glass);">⌚ Watches</button>
@@ -561,22 +427,6 @@
                 const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
                 const data = await res.json();
                 allProducts = data.items || [];
-                
-                // Load Trending Section
-                renderTrending(allProducts.filter(p => p.category === 'Trending Products' || p.featured === true));
-                
-                // Populate Condition-based Sections
-                renderSection('latestGrid', allProducts.slice(0, 8));
-                
-                const brandNew = allProducts.filter(p => (p.condition || '').toLowerCase().includes('brand new')).slice(0, 8);
-                renderSection('brandNewGrid', brandNew, 'brandNewSection');
-                
-                const refurbished = allProducts.filter(p => (p.condition || '').toLowerCase().includes('refurbished')).slice(0, 8);
-                renderSection('refurbishedGrid', refurbished, 'refurbishedSection');
-                
-                const used = allProducts.filter(p => (p.condition || '').toLowerCase().includes('used')).slice(0, 8);
-                renderSection('usedGrid', used, 'usedSection');
-                
                 applyFilters();
             } catch (e) {
                 console.error("Failed to load products:", e);
@@ -622,36 +472,6 @@
             }).join('');
 
             renderPagination(filteredProducts.length);
-        }
-
-        function renderSection(gridId, products, sectionId = null) {
-            const grid = document.getElementById(gridId);
-            const section = sectionId ? document.getElementById(sectionId) : null;
-            if (!grid) return;
-
-            if (products.length === 0) {
-                if (section) section.style.display = 'none';
-                return;
-            }
-
-            if (section) section.style.display = 'block';
-
-            grid.innerHTML = products.map(p => {
-                const imageUrl = getImageUrl(p.cover);
-                const pData = JSON.stringify(p).replace(/'/g, "\\'");
-                return `
-                <div class="glass-panel product-card" onclick='showPopup(${pData})'>
-                    <div class="product-card__media">
-                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
-                    </div>
-                    <div class="product-card__body">
-                        <span class="product-card__brand">${p.brand}</span>
-                        <h4 class="product-card__title">${p.name}</h4>
-                        <p class="product-card__specs">${p.storage} • ${p.condition}</p>
-                        <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
-                    </div>
-                </div>`;
-            }).join('');
         }
 
         function renderPagination(totalItems) {
@@ -705,40 +525,7 @@
             if (page < 1 || page > Math.ceil(filteredProducts.length / itemsPerPage)) return;
             currentPage = page;
             renderProducts();
-            document.getElementById('explore').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function renderTrending(products) {
-            const section = document.getElementById('trending');
-            const track = document.getElementById('trendingTrack');
-            if (!section || !track) return;
-
-            if (products.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-
-            section.style.display = 'block';
-            
-            // Duplicate products for infinite scroll effect
-            const displayProducts = products.length < 5 ? [...products, ...products, ...products] : [...products, ...products];
-            
-            track.innerHTML = displayProducts.map(p => {
-                const imageUrl = getImageUrl(p.cover);
-                const pData = JSON.stringify(p).replace(/'/g, "\\'");
-                return `
-                    <div class="trending-card" onclick='showPopup(${pData})'>
-                        <div class="trending-badge">HOT</div>
-                        <div class="trending-img-wrap">
-                            <img class="trending-img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
-                        </div>
-                        <div class="trending-body">
-                            <span style="color:var(--accent); font-size:0.65rem; font-weight:700; text-transform:uppercase;">${p.brand}</span>
-                            <h4 style="margin: 5px 0; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;">${p.name}</h4>
-                            <div style="font-weight: 700; color: white; font-size: 1rem;">Rs. ${Number(p.price).toLocaleString()}</div>
-                        </div>
-                    </div>`;
-            }).join('');
+            document.getElementById('arrivals').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 2. FILTER & SEARCH LOGIC

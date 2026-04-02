@@ -55,10 +55,6 @@ async function loadProducts() {
         const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
         const data = await res.json();
         allProducts = data.items || data; // Handle both {items: []} and []
-        
-        // Load Trending Section
-        renderTrending(allProducts.filter(p => p.category === 'Trending Products' || p.featured === true));
-        
         applyFilters();
     } catch (e) {
         console.error("Failed to load products:", e);
@@ -135,38 +131,6 @@ function renderProducts(products) {
         fragment.appendChild(card);
     });
     grid.appendChild(fragment);
-}
-
-function renderTrending(products) {
-    const section = document.getElementById('trending');
-    const track = document.getElementById('trendingTrack');
-    if (!section || !track) return;
-
-    if (products.length === 0) {
-        section.style.display = 'none';
-        return;
-    }
-
-    section.style.display = 'block';
-    
-    // Duplicate products for infinite scroll effect (similar to reviews)
-    const displayProducts = products.length < 5 ? [...products, ...products, ...products] : [...products, ...products];
-    
-    track.innerHTML = displayProducts.map(p => {
-        const imageUrl = getImageUrl(p.cover);
-        return `
-            <div class="trending-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "\\'")})'>
-                <div class="trending-badge">HOT</div>
-                <div class="trending-img-wrap">
-                    <img class="trending-img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
-                </div>
-                <div class="trending-body">
-                    <span style="color:var(--accent); font-size:0.65rem; font-weight:700; text-transform:uppercase;">${p.brand}</span>
-                    <h4 style="margin: 5px 0; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;">${p.name}</h4>
-                    <div style="font-weight: 700; color: white; font-size: 1rem;">Rs. ${Number(p.price).toLocaleString()}</div>
-                </div>
-            </div>`;
-    }).join('');
 }
 
 function showPopup(p) {
