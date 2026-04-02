@@ -264,14 +264,7 @@
     </header>
 
     <section class="container" id="arrivals">
-        <div class="trending-section">
-            <h2 class="trending-heading">Trending Now 🚀 <span>Most Loved by Customers</span></h2>
-            <div class="trending-track" id="trendingTrack">
-                <!-- Trending products injected here -->
-            </div>
-        </div>
-
-        <h2 class="arrivals-heading">Explore Catalog 🔥</h2>
+        <h2 class="arrivals-heading">Latest Arrivals 🔥</h2>
         
         <div class="tabs-container arrivals-tabs">
             <div class="tabs" style="display: inline-flex; gap: 10px;">
@@ -282,29 +275,13 @@
                 <button class="cat-filter" onclick="filterByCategory('Accessories', this)" style="background: var(--glass);">🎧 Accessories</button>
                 <button class="cat-filter" onclick="filterByCategory('Repair Parts', this)" style="background: var(--glass);">🛠️ Parts</button>
                 <button class="cat-filter" onclick="filterByCategory('Tablets', this)" style="background: var(--glass);">📟 Tablets</button>
-                <button class="cat-filter" onclick="filterByCategory('Laptops', this)" style="background: var(--glass);">💻 Laptops</button>
             </div>
         </div>
 
         <input type="text" id="searchInput" placeholder="Search by model or brand...">
-
-        <div id="brandNewSection">
-            <h2 class="condition-heading"><span>Premium</span> Brand New</h2>
-            <div id="brandNewGrid" class="product-grid"></div>
-            <div id="brandNewPagination" class="pagination-container"></div>
+        <div id="productGrid" class="product-grid">
         </div>
-
-        <div id="refurbishedSection">
-            <h2 class="condition-heading"><span>Certified</span> Refurbished</h2>
-            <div id="refurbishedGrid" class="product-grid"></div>
-            <div id="refurbishedPagination" class="pagination-container"></div>
-        </div>
-
-        <div id="usedSection">
-            <h2 class="condition-heading"><span>Verified</span> Pre-Owned</h2>
-            <div id="usedGrid" class="product-grid"></div>
-            <div id="usedPagination" class="pagination-container"></div>
-        </div>
+        <div id="pagination" class="pagination-container"></div>
     </section>
 
     <section class="container">
@@ -424,13 +401,8 @@
         let allProducts = [];
         let filteredProducts = [];
         let activeCategory = 'all';
-        
-        // Pagination states for each section
-        const paginationStates = {
-            'Brand New': { currentPage: 1, itemsPerPage: 8, gridId: 'brandNewGrid', paginationId: 'brandNewPagination', sectionId: 'brandNewSection' },
-            'Refurbished': { currentPage: 1, itemsPerPage: 8, gridId: 'refurbishedGrid', paginationId: 'refurbishedPagination', sectionId: 'refurbishedSection' },
-            'Used': { currentPage: 1, itemsPerPage: 8, gridId: 'usedGrid', paginationId: 'usedPagination', sectionId: 'usedSection' }
-        };
+        let currentPage = 1;
+        const itemsPerPage = 12;
 
         function getImageUrl(path) {
             if (!path) return 'https://via.placeholder.com/300';
@@ -458,10 +430,8 @@
                 applyFilters();
             } catch (e) {
                 console.error("Failed to load products:", e);
-                ['brandNewGrid', 'refurbishedGrid', 'usedGrid'].forEach(id => {
-                    const grid = document.getElementById(id);
-                    if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
-                });
+                const grid = document.getElementById('productGrid');
+                if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
             }
         }
 
@@ -470,72 +440,45 @@
         setInterval(loadProducts, 30000);
 
         function renderProducts() {
-            // 1. Handle Trending Section
-            const trendingTrack = document.getElementById('trendingTrack');
-            if (trendingTrack) {
-                // User will manually add these products via admin later
-                // For now, let's keep it empty or show a placeholder if requested
-                // I will clear the auto-injection as requested
-                trendingTrack.innerHTML = ""; 
-                
-                // If it's empty, hide the section
-                if (trendingTrack.innerHTML === "") {
-                    document.querySelector('.trending-section').style.display = 'none';
-                } else {
-                    document.querySelector('.trending-section').style.display = 'block';
-                }
+            const grid = document.getElementById('productGrid');
+            if(!grid) return;
+            
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products currently available.</p>";
+                renderPagination(0);
+                return;
             }
 
-            // 2. Handle Condition Sections
-            const conditions = ['Brand New', 'Refurbished', 'Used'];
-            
-            conditions.forEach(cond => {
-                const state = paginationStates[cond];
-                const grid = document.getElementById(state.gridId);
-                const section = document.getElementById(state.sectionId);
-                
-                if(!grid || !section) return;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredProducts.slice(startIndex, endIndex);
 
-                const sectionItems = filteredProducts.filter(p => p.condition === cond);
+            grid.innerHTML = paginatedItems.map(p => {
+                const imageUrl = getImageUrl(p.cover);
+                // Safe stringification for the onclick handler
+                const pData = JSON.stringify(p).replace(/'/g, "\\'");
+                return `
+                <div class="glass-panel product-card" onclick='showPopup(${pData})'>
+                    <div class="product-card__media">
+                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
+                    </div>
+                    <div class="product-card__body">
+                        <span class="product-card__brand">${p.brand}</span>
+                        <h4 class="product-card__title">${p.name}</h4>
+                        <p class="product-card__specs">${p.storage} • ${p.condition}</p>
+                        <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
+                    </div>
+                </div>`;
+            }).join('');
 
-                if (sectionItems.length === 0) {
-                    section.style.display = 'none';
-                    return;
-                } else {
-                    section.style.display = 'block';
-                }
-
-                const startIndex = (state.currentPage - 1) * state.itemsPerPage;
-                const endIndex = startIndex + state.itemsPerPage;
-                const paginatedItems = sectionItems.slice(startIndex, endIndex);
-
-                grid.innerHTML = paginatedItems.map(p => {
-                    const imageUrl = getImageUrl(p.cover);
-                    const pData = JSON.stringify(p).replace(/'/g, "\\'");
-                    return `
-                    <div class="glass-panel product-card" onclick='showPopup(${pData})'>
-                        <div class="product-card__media">
-                            <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
-                        </div>
-                        <div class="product-card__body">
-                            <span class="product-card__brand">${p.brand}</span>
-                            <h4 class="product-card__title">${p.name}</h4>
-                            <p class="product-card__specs">${p.storage} • ${p.category}</p>
-                            <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
-                        </div>
-                    </div>`;
-                }).join('');
-
-                renderPagination(sectionItems.length, cond);
-            });
+            renderPagination(filteredProducts.length);
         }
 
-        function renderPagination(totalItems, condition) {
-            const state = paginationStates[condition];
-            const paginationContainer = document.getElementById(state.paginationId);
+        function renderPagination(totalItems) {
+            const paginationContainer = document.getElementById('pagination');
             if (!paginationContainer) return;
 
-            const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
             if (totalPages <= 1) {
                 paginationContainer.innerHTML = "";
                 return;
@@ -543,33 +486,46 @@
 
             let html = "";
             // Previous button
-            html += `<button class="page-btn ${state.currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${state.currentPage - 1}, '${condition}')" ${state.currentPage === 1 ? 'disabled' : ''}>
+            html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
                         <i class="fas fa-chevron-left"></i>
                     </button>`;
 
             // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
-                    html += `<button class="page-btn ${i === state.currentPage ? 'active' : ''}" onclick="changePage(${i}, '${condition}')">${i}</button>`;
-                } else if (i === state.currentPage - 2 || i === state.currentPage + 2) {
-                    html += `<span class="page-dots">...</span>`;
-                }
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) html += `<span class="page-dots">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span class="page-dots">...</span>`;
+                html += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
             }
 
             // Next button
-            html += `<button class="page-btn ${state.currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${state.currentPage + 1}, '${condition}')" ${state.currentPage === totalPages ? 'disabled' : ''}>
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
                         <i class="fas fa-chevron-right"></i>
                     </button>`;
 
             paginationContainer.innerHTML = html;
         }
 
-        function changePage(page, condition) {
-            const state = paginationStates[condition];
-            if (page < 1 || page > Math.ceil(filteredProducts.filter(p => p.condition === condition).length / state.itemsPerPage)) return;
-            state.currentPage = page;
+        function changePage(page) {
+            if (page < 1 || page > Math.ceil(filteredProducts.length / itemsPerPage)) return;
+            currentPage = page;
             renderProducts();
-            document.getElementById(state.sectionId).scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('arrivals').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 2. FILTER & SEARCH LOGIC
@@ -593,12 +549,7 @@
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
                 return matchesSearch && matchesCategory;
             });
-            
-            // Reset pagination for all sections
-            Object.keys(paginationStates).forEach(key => {
-                paginationStates[key].currentPage = 1;
-            });
-            
+            currentPage = 1; // Reset to page 1 on new filter
             renderProducts();
         }
 
