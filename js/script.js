@@ -55,6 +55,22 @@ async function loadProducts() {
         const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
         const data = await res.json();
         allProducts = data.items || data; // Handle both {items: []} and []
+        
+        // Load Trending Section
+        renderTrending(allProducts.filter(p => p.category === 'Trending Products' || p.featured === true));
+        
+        // Populate Condition-based Sections
+        renderSection('latestGrid', allProducts.slice(0, 8));
+        
+        const brandNew = allProducts.filter(p => p.condition === 'Brand New').slice(0, 8);
+        renderSection('brandNewGrid', brandNew, 'brandNewSection');
+        
+        const refurbished = allProducts.filter(p => p.condition === 'Refurbished').slice(0, 8);
+        renderSection('refurbishedGrid', refurbished, 'refurbishedSection');
+        
+        const used = allProducts.filter(p => p.condition === 'Used').slice(0, 8);
+        renderSection('usedGrid', used, 'usedSection');
+
         applyFilters();
     } catch (e) {
         console.error("Failed to load products:", e);
@@ -131,6 +147,72 @@ function renderProducts(products) {
         fragment.appendChild(card);
     });
     grid.appendChild(fragment);
+}
+
+function renderSection(gridId, products, sectionId = null) {
+    const grid = document.getElementById(gridId);
+    const section = sectionId ? document.getElementById(sectionId) : null;
+    if (!grid) return;
+
+    if (products.length === 0) {
+        if (section) section.style.display = 'none';
+        return;
+    }
+
+    if (section) section.style.display = 'block';
+
+    grid.innerHTML = products.map(p => {
+        const imageUrl = getImageUrl(p.cover);
+        const stockColor = p.inStock ? '#10b981' : '#ef4444';
+        const pData = JSON.stringify(p).replace(/'/g, "\\'");
+        return `
+        <div class="glass-panel product-card" onclick='showPopup(${pData})'>
+            <div class="product-card__media">
+                <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
+            </div>
+            <div class="product-card__body">
+                <span class="product-card__brand">${p.brand}</span>
+                <h4 class="product-card__title">${p.name}</h4>
+                <p class="product-card__specs">${p.storage} • ${p.condition}</p>
+                <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
+                <div style="font-size: 0.7rem; color: ${stockColor}; margin-top: 5px; font-weight: bold;">
+                    ${p.inStock ? 'In Stock' : 'Out of Stock'}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function renderTrending(products) {
+    const section = document.getElementById('trending');
+    const track = document.getElementById('trendingTrack');
+    if (!section || !track) return;
+
+    if (products.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+
+    section.style.display = 'block';
+    
+    // Duplicate products for infinite scroll effect (similar to reviews)
+    const displayProducts = products.length < 5 ? [...products, ...products, ...products] : [...products, ...products];
+    
+    track.innerHTML = displayProducts.map(p => {
+        const imageUrl = getImageUrl(p.cover);
+        return `
+            <div class="trending-card" onclick='showPopup(${JSON.stringify(p).replace(/'/g, "\\'")})'>
+                <div class="trending-badge">HOT</div>
+                <div class="trending-img-wrap">
+                    <img class="trending-img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
+                </div>
+                <div class="trending-body">
+                    <span style="color:var(--accent); font-size:0.65rem; font-weight:700; text-transform:uppercase;">${p.brand}</span>
+                    <h4 style="margin: 5px 0; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white;">${p.name}</h4>
+                    <div style="font-weight: 700; color: white; font-size: 1rem;">Rs. ${Number(p.price).toLocaleString()}</div>
+                </div>
+            </div>`;
+    }).join('');
 }
 
 function showPopup(p) {
