@@ -80,7 +80,28 @@
             transition: 0.3s;
         }
         .whatsapp-btn-modal:hover { background: #1eb954; transform: translateY(-2px); }
-        .product-card { cursor: pointer; transition: 0.3s; }
+        /* PRODUCT GRID LAYOUT FIX */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        @media (max-width: 1024px) {
+            .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 768px) {
+            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 12px !important; }
+        }
+
+        .product-card { 
+            cursor: pointer; 
+            transition: 0.3s; 
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
         .product-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .thumb-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
         .thumb-img { 
@@ -547,13 +568,13 @@
                 // Populate Condition-based Sections
                 renderSection('latestGrid', allProducts.slice(0, 8));
                 
-                const brandNew = allProducts.filter(p => p.condition === 'Brand New').slice(0, 8);
+                const brandNew = allProducts.filter(p => (p.condition || '').toLowerCase().includes('brand new')).slice(0, 8);
                 renderSection('brandNewGrid', brandNew, 'brandNewSection');
                 
-                const refurbished = allProducts.filter(p => p.condition === 'Refurbished').slice(0, 8);
+                const refurbished = allProducts.filter(p => (p.condition || '').toLowerCase().includes('refurbished')).slice(0, 8);
                 renderSection('refurbishedGrid', refurbished, 'refurbishedSection');
                 
-                const used = allProducts.filter(p => p.condition === 'Used').slice(0, 8);
+                const used = allProducts.filter(p => (p.condition || '').toLowerCase().includes('used')).slice(0, 8);
                 renderSection('usedGrid', used, 'usedSection');
                 
                 applyFilters();
