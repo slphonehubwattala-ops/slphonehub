@@ -371,6 +371,12 @@
                 const data = await res.json().catch(() => ({}));
                 console.log("Server Response:", data);
                 
+                if (res.status === 401) {
+                    alert("Session expired. Please log in again.");
+                    logout();
+                    return;
+                }
+
                 if (!res.ok) {
                     const errorMsg = data.error || data.message || "Request failed";
                     throw new Error(errorMsg);
@@ -395,6 +401,13 @@
                         "Authorization": `Bearer ${adminToken}`
                     }
                 });
+
+                if (res.status === 401) {
+                    alert("Session expired. Please log in again.");
+                    logout();
+                    return;
+                }
+
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || data.message || "Delete failed");
                 location.reload();

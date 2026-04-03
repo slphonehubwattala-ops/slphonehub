@@ -534,30 +534,48 @@
             </div>`;
         }
 
-        function renderConditionSections() {
+        async function renderConditionSections() {
             const brandNewGrid = document.getElementById('brandNewGrid');
             const usedGrid = document.getElementById('usedGrid');
             const refurbishedGrid = document.getElementById('refurbishedGrid');
 
             if (brandNewGrid) {
-                const brandNewProds = allProducts.filter(p => p.condition === 'Brand New').slice(0, 4);
-                brandNewGrid.innerHTML = brandNewProds.length > 0 
-                    ? brandNewProds.map(p => renderProductCard(p)).join('')
-                    : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                try {
+                    const res = await fetch(`${API_URL}/phones?condition=Brand New&limit=4`);
+                    const data = await res.json();
+                    const brandNewProds = data.items || [];
+                    brandNewGrid.innerHTML = brandNewProds.length > 0 
+                        ? brandNewProds.map(p => renderProductCard(p)).join('')
+                        : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                } catch (e) {
+                    console.error("Failed to load brand new products:", e);
+                }
             }
 
             if (usedGrid) {
-                const usedProds = allProducts.filter(p => p.condition === 'Used').slice(0, 4);
-                usedGrid.innerHTML = usedProds.length > 0 
-                    ? usedProds.map(p => renderProductCard(p)).join('')
-                    : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                try {
+                    const res = await fetch(`${API_URL}/phones?condition=Used&limit=4`);
+                    const data = await res.json();
+                    const usedProds = data.items || [];
+                    usedGrid.innerHTML = usedProds.length > 0 
+                        ? usedProds.map(p => renderProductCard(p)).join('')
+                        : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                } catch (e) {
+                    console.error("Failed to load used products:", e);
+                }
             }
 
             if (refurbishedGrid) {
-                const refurbishedProds = allProducts.filter(p => p.condition === 'Refurbished').slice(0, 4);
-                refurbishedGrid.innerHTML = refurbishedProds.length > 0 
-                    ? refurbishedProds.map(p => renderProductCard(p)).join('')
-                    : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                try {
+                    const res = await fetch(`${API_URL}/phones?condition=Refurbished&limit=4`);
+                    const data = await res.json();
+                    const refurbishedProds = data.items || [];
+                    refurbishedGrid.innerHTML = refurbishedProds.length > 0 
+                        ? refurbishedProds.map(p => renderProductCard(p)).join('')
+                        : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
+                } catch (e) {
+                    console.error("Failed to load refurbished products:", e);
+                }
             }
         }
 
