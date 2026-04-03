@@ -168,7 +168,6 @@
         .style-accent { border-bottom: 4px solid var(--accent) !important; }
 
         /* LOCATION MAP STYLES */
-        .location-wrapper {
             margin-top: 60px;
             border: 1px solid var(--glass-border);
         }
@@ -265,6 +264,8 @@
     </header>
 
     <section class="container" id="arrivals">
+        <h2 class="arrivals-heading">Latest Arrivals 🔥</h2>
+        
         <div class="tabs-container arrivals-tabs">
             <div class="tabs" style="display: inline-flex; gap: 10px;">
                 <button class="cat-filter active" onclick="filterByCategory('all', this)" style="background: var(--accent);">🌐 All</button>
@@ -278,25 +279,8 @@
         </div>
 
         <input type="text" id="searchInput" placeholder="Search by model or brand...">
-
-        <div id="refurbishedSection">
-            <h2 class="arrivals-heading">Refurbished Phones ✨</h2>
-            <div id="refurbishedGrid" class="product-grid"></div>
-            <div id="refurbishedPagination" class="pagination-container"></div>
+        <div id="productGrid" class="product-grid">
         </div>
-
-        <div id="brandNewSection">
-            <h2 class="arrivals-heading" style="margin-top: 60px;">Brand New Phones 🚀</h2>
-            <div id="brandNewGrid" class="product-grid"></div>
-            <div id="brandNewPagination" class="pagination-container"></div>
-        </div>
-
-        <div id="usedSection">
-            <h2 class="arrivals-heading" style="margin-top: 60px;">Used Phones 📱</h2>
-            <div id="usedGrid" class="product-grid"></div>
-            <div id="usedPagination" class="pagination-container"></div>
-        </div>
-        
         <div id="pagination" class="pagination-container"></div>
     </section>
 
@@ -336,7 +320,7 @@
             <div class="map-container" style="height: 450px; position: relative;">
                 <iframe 
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3960.238463870823!2d79.8894101!3d6.9811654!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae2f79014b89d2b%3A0xe43fe37bc4e2d5e0!2s38%20Etampolawatte%20Rd%2C%20Wattala!5e0!3m2!1sen!2slk!4v1710000000000!5m2!1sen!2slk" 
-                    width="100%" height="100%" style="border:0; filter: grayscale(0.6) contrast(1.2) brightness(0.8);" allowfullscreen="" loading="lazy">
+                    width="100%" height="100%" style="border:0; filter: grayscale(1) invert(0.92) contrast(1.2) hue-rotate(180deg);" allowfullscreen="" loading="lazy">
                 </iframe>
                 <div class="map-overlay-badge">
                     <span class="pulse"></span> Live Hub Location
@@ -417,8 +401,8 @@
         let allProducts = [];
         let filteredProducts = [];
         let activeCategory = 'all';
-        let sectionPages = { refurbished: 1, brandNew: 1, used: 1 };
-        const itemsPerPage = 8;
+        let currentPage = 1;
+        const itemsPerPage = 12;
 
         function getImageUrl(path) {
             if (!path) return 'https://via.placeholder.com/300';
@@ -446,11 +430,8 @@
                 applyFilters();
             } catch (e) {
                 console.error("Failed to load products:", e);
-                const grids = ['refurbishedGrid', 'brandNewGrid', 'usedGrid'];
-                grids.forEach(id => {
-                    const grid = document.getElementById(id);
-                    if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
-                });
+                const grid = document.getElementById('productGrid');
+                if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
             }
         }
 
@@ -459,83 +440,45 @@
         setInterval(loadProducts, 30000);
 
         function renderProducts() {
-            // Split products by condition (strictly mutually exclusive)
-            const refurbished = [];
-            const brandNew = [];
-            const used = [];
-
-            filteredProducts.forEach(p => {
-                const cond = (p.condition || '').toLowerCase();
-                
-                if (cond.includes('refurbished')) {
-                    refurbished.push(p);
-                } else if (cond.includes('brand new')) {
-                    brandNew.push(p);
-                } else if (cond.includes('used')) {
-                    used.push(p);
-                } else {
-                    // Default to refurbished if no match found (based on user's preference)
-                    refurbished.push(p);
-                }
-            });
-
-            // Render each section with its own grid and pagination
-            renderSection('refurbished', refurbished, 'refurbishedGrid', 'refurbishedPagination', 'refurbishedSection');
-            renderSection('brandNew', brandNew, 'brandNewGrid', 'brandNewPagination', 'brandNewSection');
-            renderSection('used', used, 'usedGrid', 'usedPagination', 'usedSection');
-        }
-
-        function renderSection(sectionKey, products, gridId, paginationId, sectionId) {
-            const grid = document.getElementById(gridId);
-            const paginationContainer = document.getElementById(paginationId);
-            const section = document.getElementById(sectionId);
-
-            if (!grid || !paginationContainer || !section) return;
-
-            if (products.length === 0) {
-                section.style.display = 'none';
+            const grid = document.getElementById('productGrid');
+            if(!grid) return;
+            
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products currently available.</p>";
+                renderPagination(0);
                 return;
             }
 
-            section.style.display = 'block';
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredProducts.slice(startIndex, endIndex);
 
-            // Calculate pagination
-            const totalPages = Math.ceil(products.length / itemsPerPage);
-            // Reset to page 1 if current page is out of bounds
-            if (sectionPages[sectionKey] > totalPages) sectionPages[sectionKey] = 1;
-            
-            const startIndex = (sectionPages[sectionKey] - 1) * itemsPerPage;
-            const paginatedItems = products.slice(startIndex, startIndex + itemsPerPage);
-
-            // Render grid
             grid.innerHTML = paginatedItems.map(p => {
                 const imageUrl = getImageUrl(p.cover);
+                // Safe stringification for the onclick handler
                 const pData = JSON.stringify(p).replace(/'/g, "\\'");
-                
-                const cond = (p.condition || '').toLowerCase();
-                let badgeStyle = "background: rgba(255,255,255,0.1); color: white;";
-                if (cond.includes('brand new')) badgeStyle = "background: #10b981; color: white;";
-                if (cond.includes('refurbished')) badgeStyle = "background: var(--accent); color: white;";
-                if (cond.includes('used') && !cond.includes('refurbished')) badgeStyle = "background: #3b82f6; color: white;";
-
                 return `
                 <div class="glass-panel product-card" onclick='showPopup(${pData})'>
-                    <div class="product-card__media" style="position: relative;">
-                        <div style="position: absolute; top: 10px; right: 10px; z-index: 5; padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; ${badgeStyle}">
-                            ${p.condition || 'New'}
-                        </div>
-                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name || 'Phone'}" onerror="this.src='https://via.placeholder.com/300'">
+                    <div class="product-card__media">
+                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
                     </div>
                     <div class="product-card__body">
-                        <span class="product-card__brand">${p.brand || 'Premium'}</span>
-                        <h4 class="product-card__title">${p.name || 'Latest Device'}</h4>
-                        <p class="product-card__specs">${p.storage || ''} • ${p.condition || ''}</p>
-                        <div class="product-card__price">Rs. ${Number(p.price || 0).toLocaleString()}</div>
+                        <span class="product-card__brand">${p.brand}</span>
+                        <h4 class="product-card__title">${p.name}</h4>
+                        <p class="product-card__specs">${p.storage} • ${p.condition}</p>
+                        <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
                     </div>
                 </div>`;
             }).join('');
 
-            // Render pagination
+            renderPagination(filteredProducts.length);
+        }
+
+        function renderPagination(totalItems) {
+            const paginationContainer = document.getElementById('pagination');
+            if (!paginationContainer) return;
+
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
             if (totalPages <= 1) {
                 paginationContainer.innerHTML = "";
                 return;
@@ -543,28 +486,46 @@
 
             let html = "";
             // Previous button
-            html += `<button class="page-btn ${sectionPages[sectionKey] === 1 ? 'disabled' : ''}" onclick="changeSectionPage('${sectionKey}', ${sectionPages[sectionKey] - 1})" ${sectionPages[sectionKey] === 1 ? 'disabled' : ''}>
+            html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
                         <i class="fas fa-chevron-left"></i>
                     </button>`;
 
-            for (let i = 1; i <= totalPages; i++) {
-                html += `<button class="page-btn ${i === sectionPages[sectionKey] ? 'active' : ''}" onclick="changeSectionPage('${sectionKey}', ${i})">${i}</button>`;
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage < maxVisiblePages - 1) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) html += `<span class="page-dots">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span class="page-dots">...</span>`;
+                html += `<button class="page-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
             }
 
             // Next button
-            html += `<button class="page-btn ${sectionPages[sectionKey] === totalPages ? 'disabled' : ''}" onclick="changeSectionPage('${sectionKey}', ${sectionPages[sectionKey] + 1})" ${sectionPages[sectionKey] === totalPages ? 'disabled' : ''}>
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
                         <i class="fas fa-chevron-right"></i>
                     </button>`;
 
             paginationContainer.innerHTML = html;
         }
 
-        function changeSectionPage(sectionKey, page) {
-            sectionPages[sectionKey] = page;
+        function changePage(page) {
+            if (page < 1 || page > Math.ceil(filteredProducts.length / itemsPerPage)) return;
+            currentPage = page;
             renderProducts();
-            // Scroll to top of section
-            const sectionMap = { refurbished: 'refurbishedSection', brandNew: 'brandNewSection', used: 'usedSection' };
-            document.getElementById(sectionMap[sectionKey]).scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('arrivals').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 2. FILTER & SEARCH LOGIC
@@ -582,16 +543,13 @@
         document.getElementById('searchInput').addEventListener('input', applyFilters);
 
         function applyFilters() {
-            const searchInput = document.getElementById('searchInput');
-            if (!searchInput) return;
-            const term = searchInput.value.toLowerCase();
+            const term = document.getElementById('searchInput').value.toLowerCase();
             filteredProducts = allProducts.filter(p => {
                 const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
                 return matchesSearch && matchesCategory;
             });
-            // Reset all section pages to 1 on new filter
-            sectionPages = { refurbished: 1, brandNew: 1, used: 1 };
+            currentPage = 1; // Reset to page 1 on new filter
             renderProducts();
         }
 
