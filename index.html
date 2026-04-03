@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SL Phone Hub | Premium Tech Marketplace</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.1">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
@@ -167,6 +167,73 @@
         .style-light { background: rgba(255, 255, 255, 0.05) !important; }
         .style-accent { border-bottom: 4px solid var(--accent) !important; }
 
+        /* TRENDING PRODUCTS SCROLL */
+        .trending-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+            background: rgba(249, 115, 22, 0.03);
+            border-top: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 40px;
+        }
+        .trending-track {
+            display: flex;
+            gap: 20px;
+            width: max-content;
+            animation: scroll-trending 30s linear infinite;
+        }
+        .trending-track:hover {
+            animation-play-state: paused;
+        }
+        @keyframes scroll-trending {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-50% - 10px)); }
+        }
+        .trending-card {
+            width: 280px;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: 0.3s;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            gap: 15px;
+        }
+        .trending-card:hover {
+            border-color: var(--accent);
+            background: rgba(249, 115, 22, 0.08);
+            transform: scale(1.02);
+        }
+        .trending-img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .trending-info {
+            flex: 1;
+        }
+        .trending-name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .trending-price {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
         /* SECTION ENHANCEMENTS */
         .section-fade {
             opacity: 0;
@@ -288,6 +355,15 @@
             </div>
         </div>
     </header>
+
+    <div id="trendingSection" class="trending-container" style="display: none;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <span style="color: var(--accent); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Trending Now 🔥</span>
+        </div>
+        <div class="trending-track" id="trendingTrack">
+            <!-- Trending products injected here -->
+        </div>
+    </div>
 
     <section class="container" id="arrivals">
         <h2 class="arrivals-heading">Latest Arrivals 🔥</h2>
@@ -459,7 +535,7 @@
         let filteredProducts = [];
         let activeCategory = 'all';
         let currentPage = 1;
-        const itemsPerPage = 12;
+        const itemsPerPage = 8; // Showing 8 products per page as requested
 
         function getImageUrl(path) {
             if (!path) return 'https://via.placeholder.com/300';
@@ -485,10 +561,43 @@
                 const data = await res.json();
                 allProducts = data.items || [];
                 applyFilters();
+                loadTrendingProducts(); // Load trending products when main products are loaded
             } catch (e) {
                 console.error("Failed to load products:", e);
                 const grid = document.getElementById('productGrid');
                 if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
+            }
+        }
+
+        async function loadTrendingProducts() {
+            try {
+                const res = await fetch(`${API_URL}/phones?trending=true&limit=10`);
+                const data = await res.json();
+                const trending = data.items || [];
+                const track = document.getElementById('trendingTrack');
+                const section = document.getElementById('trendingSection');
+                
+                if (trending.length > 0) {
+                    section.style.display = 'block';
+                    // Duplicate for infinite scroll
+                    const displayItems = [...trending, ...trending];
+                    track.innerHTML = displayItems.map(p => {
+                        const imageUrl = getImageUrl(p.cover);
+                        const pData = JSON.stringify(p).replace(/'/g, "\\'");
+                        return `
+                        <div class="trending-card" onclick='showPopup(${pData})'>
+                            <img class="trending-img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/100'">
+                            <div class="trending-info">
+                                <h5 class="trending-name">${p.name}</h5>
+                                <div class="trending-price">Rs. ${Number(p.price).toLocaleString()}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    section.style.display = 'none';
+                }
+            } catch (e) {
+                console.error("Failed to load trending products:", e);
             }
         }
 

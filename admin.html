@@ -133,6 +133,7 @@
             <div style="display:flex; gap:20px; margin-top:15px;">
                 <label><input type="checkbox" id="pInStock" checked> In Stock</label>
                 <label><input type="checkbox" id="pFeatured"> Featured</label>
+                <label><input type="checkbox" id="pTrending"> Trending 🔥</label>
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
@@ -251,6 +252,7 @@
             document.getElementById('pSpecs').value = data.specs;
             document.getElementById('pInStock').checked = data.inStock;
             document.getElementById('pFeatured').checked = data.featured;
+            document.getElementById('pTrending').checked = data.trending || false;
 
             // Load existing images (URLs)
             productImages = data.allImages || [];
@@ -350,6 +352,7 @@
                     specs: document.getElementById('pSpecs').value || '',
                     inStock: document.getElementById('pInStock').checked,
                     featured: document.getElementById('pFeatured').checked,
+                    trending: document.getElementById('pTrending').checked,
                     cover: productImages[coverIdx] || productImages[0] || '',
                     allImages: productImages
                 };
