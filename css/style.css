@@ -251,13 +251,13 @@ h1 span {
 
 /* --- PRODUCTS (ALIGNED GRID) --- */
 .product-grid { 
-    display: grid; 
-    grid-template-columns: repeat(4, minmax(0, 1fr)); 
-    gap: 20px; 
+    display: grid !important; 
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important; 
+    gap: 20px !important; 
     margin-top: 0 !important;
-    align-items: stretch;
-    width: 100%;
-    box-sizing: border-box;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* min-width:0 on items lets tracks shrink so the grid stays full-width (no stray gap on the right) */
@@ -269,7 +269,7 @@ h1 span {
 #arrivals.container {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch; /* Changed from flex-start to stretch to ensure full width grids */
     gap: 1.75rem;
     width: 100%;
     box-sizing: border-box;
@@ -722,7 +722,7 @@ footer {
 
 /* --- RESPONSIVE FIX --- */
 @media (max-width: 1024px) {
-    #productGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .footer-top { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -741,7 +741,7 @@ footer {
     
     .location-details h2 { font-size: 2rem; }
     
-    #productGrid { 
+    .product-grid { 
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
         gap: 12px !important; 
         align-items: stretch !important;

@@ -408,7 +408,11 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocal = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.hostname.startsWith('192.168.') || 
+                        window.location.hostname.startsWith('10.') || 
+                        window.location.hostname.endsWith('.local');
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
         const API_URL = `${API_BASE_URL}/api`;
 
@@ -455,23 +459,30 @@
         }
 
         // Initial load + refresh
-        loadProducts();
-        setInterval(loadProducts, 30000);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProducts();
+            setInterval(loadProducts, 30000);
+        });
 
         function renderProducts() {
-            // Split products by condition (using safe property access)
-            const refurbished = filteredProducts.filter(p => {
+            // Split products by condition (strictly mutually exclusive)
+            const refurbished = [];
+            const brandNew = [];
+            const used = [];
+
+            filteredProducts.forEach(p => {
                 const cond = (p.condition || '').toLowerCase();
-                return cond === 'refurbished' || cond.includes('refurbished');
-            });
-            const brandNew = filteredProducts.filter(p => {
-                const cond = (p.condition || '').toLowerCase();
-                return cond === 'brand new' || cond.includes('brand new');
-            });
-            const used = filteredProducts.filter(p => {
-                const cond = (p.condition || '').toLowerCase();
-                // ONLY include if it says 'used' and NOT 'refurbished'
-                return (cond === 'used' || cond.includes('used')) && !cond.includes('refurbished');
+                
+                if (cond.includes('refurbished')) {
+                    refurbished.push(p);
+                } else if (cond.includes('brand new')) {
+                    brandNew.push(p);
+                } else if (cond.includes('used')) {
+                    used.push(p);
+                } else {
+                    // Default to refurbished if no match found (based on user's preference)
+                    refurbished.push(p);
+                }
             });
 
             // Render each section with its own grid and pagination
@@ -577,13 +588,16 @@
         document.getElementById('searchInput').addEventListener('input', applyFilters);
 
         function applyFilters() {
-            const term = document.getElementById('searchInput').value.toLowerCase();
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) return;
+            const term = searchInput.value.toLowerCase();
             filteredProducts = allProducts.filter(p => {
                 const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
                 const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
                 return matchesSearch && matchesCategory;
             });
-            currentPage = 1; // Reset to page 1 on new filter
+            // Reset all section pages to 1 on new filter
+            sectionPages = { refurbished: 1, brandNew: 1, used: 1 };
             renderProducts();
         }
 
