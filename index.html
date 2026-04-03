@@ -460,11 +460,18 @@
 
         function renderProducts() {
             // Split products by condition (using safe property access)
-            const refurbished = filteredProducts.filter(p => (p.condition || '').toLowerCase().includes('refurbished'));
-            const brandNew = filteredProducts.filter(p => (p.condition || '').toLowerCase().includes('brand new'));
+            const refurbished = filteredProducts.filter(p => {
+                const cond = (p.condition || '').toLowerCase();
+                return cond === 'refurbished' || cond.includes('refurbished');
+            });
+            const brandNew = filteredProducts.filter(p => {
+                const cond = (p.condition || '').toLowerCase();
+                return cond === 'brand new' || cond.includes('brand new');
+            });
             const used = filteredProducts.filter(p => {
                 const cond = (p.condition || '').toLowerCase();
-                return cond.includes('used') && !cond.includes('refurbished');
+                // ONLY include if it says 'used' and NOT 'refurbished'
+                return (cond === 'used' || cond.includes('used')) && !cond.includes('refurbished');
             });
 
             // Render each section with its own grid and pagination
