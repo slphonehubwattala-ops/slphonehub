@@ -410,7 +410,10 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLocal = window.location.hostname === 'localhost' || 
+                        window.location.hostname === '127.0.0.1' || 
+                        window.location.protocol === 'file:' || 
+                        window.location.hostname === '';
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
         const API_URL = `${API_BASE_URL}/api`;
 
@@ -418,21 +421,21 @@
 
         let allProductsByCondition = {
             'all': [],
-            'Brand New': [],
-            'Used': [],
-            'Refurbished': []
+            'brandNew': [],
+            'used': [],
+            'refurbished': []
         };
         let filteredProductsByCondition = {
             'all': [],
-            'Brand New': [],
-            'Used': [],
-            'Refurbished': []
+            'brandNew': [],
+            'used': [],
+            'refurbished': []
         };
         let currentPages = {
             'all': 1,
-            'Brand New': 1,
-            'Used': 1,
-            'Refurbished': 1
+            'brandNew': 1,
+            'used': 1,
+            'refurbished': 1
         };
         let activeCategory = 'all';
         const itemsPerPage = 8;
@@ -464,16 +467,21 @@
                 // Clear previous data
                 allProductsByCondition = {
                     'all': [],
-                    'Brand New': [],
-                    'Used': [],
-                    'Refurbished': []
+                    'brandNew': [],
+                    'used': [],
+                    'refurbished': []
                 };
 
                 // Populate allProductsByCondition
                 allProductsByCondition['all'] = fetchedProducts;
                 fetchedProducts.forEach(p => {
-                    if (allProductsByCondition[p.condition]) {
-                        allProductsByCondition[p.condition].push(p);
+                    const cond = (p.condition || '').trim().toLowerCase();
+                    if (cond === 'brand new') {
+                        allProductsByCondition['brandNew'].push(p);
+                    } else if (cond === 'used') {
+                        allProductsByCondition['used'].push(p);
+                    } else if (cond === 'refurbished') {
+                        allProductsByCondition['refurbished'].push(p);
                     }
                 });
                 
@@ -529,9 +537,9 @@
 
         function renderAllProductSections() {
             renderProductSection(filteredProductsByCondition['all'], 'productGrid', 'pagination', 'all');
-            renderProductSection(filteredProductsByCondition['Brand New'], 'brandNewProductGrid', 'brandNewPagination', 'Brand New');
-            renderProductSection(filteredProductsByCondition['Used'], 'usedProductGrid', 'usedPagination', 'Used');
-            renderProductSection(filteredProductsByCondition['Refurbished'], 'refurbishedProductGrid', 'refurbishedPagination', 'Refurbished');
+            renderProductSection(filteredProductsByCondition['brandNew'], 'brandNewProductGrid', 'brandNewPagination', 'brandNew');
+            renderProductSection(filteredProductsByCondition['used'], 'usedProductGrid', 'usedPagination', 'used');
+            renderProductSection(filteredProductsByCondition['refurbished'], 'refurbishedProductGrid', 'refurbishedPagination', 'refurbished');
         }
 
         function renderPagination(totalItems, paginationId, sectionKey) {
@@ -590,11 +598,12 @@
             if (page < 1 || page > totalPages) return;
             currentPages[sectionKey] = page;
             
-            const gridId = sectionKey === 'all' ? 'productGrid' : `${sectionKey.replace(/\s/g, '')}ProductGrid`;
-            const paginationId = sectionKey === 'all' ? 'pagination' : `${sectionKey.replace(/\s/g, '')}Pagination`;
+            const gridId = sectionKey === 'all' ? 'productGrid' : `${sectionKey}ProductGrid`;
+            const paginationId = sectionKey === 'all' ? 'pagination' : `${sectionKey}Pagination`;
             renderProductSection(filteredProductsByCondition[sectionKey], gridId, paginationId, sectionKey);
 
-            const sectionElement = document.getElementById(sectionKey === 'all' ? 'arrivals' : `${sectionKey.replace(/\s/g, '')}Arrivals`);
+            const sectionId = sectionKey === 'all' ? 'arrivals' : `${sectionKey}Arrivals`;
+            const sectionElement = document.getElementById(sectionId);
             if (sectionElement) {
                 sectionElement.scrollIntoView({ behavior: 'smooth' });
             }
@@ -623,9 +632,9 @@
                 return matchesSearch && matchesCategory;
             });
 
-            // Filter condition-specific products (only by search term, category is handled by the section itself)
-            ['Brand New', 'Used', 'Refurbished'].forEach(condition => {
-                filteredProductsByCondition[condition] = allProductsByCondition[condition].filter(p => {
+            // Filter condition-specific products
+            ['brandNew', 'used', 'refurbished'].forEach(conditionKey => {
+                filteredProductsByCondition[conditionKey] = allProductsByCondition[conditionKey].filter(p => {
                     const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
                     return matchesSearch;
                 });
