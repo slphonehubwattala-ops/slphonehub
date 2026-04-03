@@ -408,11 +408,7 @@
 
     <script>
         // --- API CONFIG (replaces Firebase) ---
-        const isLocal = window.location.hostname === 'localhost' || 
-                        window.location.hostname === '127.0.0.1' || 
-                        window.location.hostname.startsWith('192.168.') || 
-                        window.location.hostname.startsWith('10.') || 
-                        window.location.hostname.endsWith('.local');
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
         const API_URL = `${API_BASE_URL}/api`;
 
@@ -446,7 +442,7 @@
             try {
                 const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
                 const data = await res.json();
-                allProducts = data.items || data || [];
+                allProducts = data.items || [];
                 applyFilters();
             } catch (e) {
                 console.error("Failed to load products:", e);
@@ -459,10 +455,8 @@
         }
 
         // Initial load + refresh
-        document.addEventListener('DOMContentLoaded', () => {
-            loadProducts();
-            setInterval(loadProducts, 30000);
-        });
+        loadProducts();
+        setInterval(loadProducts, 30000);
 
         function renderProducts() {
             // Split products by condition (strictly mutually exclusive)
