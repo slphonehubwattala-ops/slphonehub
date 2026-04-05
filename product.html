@@ -141,6 +141,16 @@
         .breadcrumb { margin-bottom: 20px; color: var(--text-sub); font-size: 0.9rem; }
         .breadcrumb a { color: var(--accent); text-decoration: none; }
 
+        /* CUSTOM SPACING FOR PRODUCT PAGE TO PREVENT NAVBAR OVERLAP */
+        body {
+            padding-top: 150px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding-top: 120px;
+            }
+        }
+
         /* Loading Skeleton */
         .skeleton {
             background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
