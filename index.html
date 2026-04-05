@@ -316,33 +316,6 @@
 <body>
     <div class="glass-bg"></div>
 
-    <div class="modal-overlay" id="productModal">
-        <div class="details-content glass-panel">
-            <button class="close-modal" onclick="closePopup()">×</button>
-            <div id="modalLeft">
-                <img id="modalMainImg" class="details-img" src="">
-                <div id="modalGallery" class="thumb-row"></div>
-            </div>
-            <div>
-                <span id="modalBrand" style="color:var(--accent); text-transform:uppercase; font-size:0.75rem; font-weight:700;"></span>
-                <h2 id="modalName" style="margin: 10px 0; font-size: 2rem;"></h2>
-                <div id="modalPrice" style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 20px;"></div>
-                <div class="spec-list">
-                    <p><strong>Condition:</strong> <span id="modalCondition"></span></p>
-                    <p><strong>Storage:</strong> <span id="modalStorage"></span></p>
-                    <p><strong>Description:</strong></p>
-                    <p id="modalDesc" style="margin-bottom: 15px;"></p>
-                    <hr style="opacity:0.1; margin: 20px 0;">
-                    <p><strong>Technical Specs:</strong></p>
-                    <p id="modalSpecs" style="white-space: pre-line;"></p>
-                </div>
-                <a href="#" id="modalWA" target="_blank" class="whatsapp-btn-modal">
-                    <i class="fab fa-whatsapp"></i> Order via WhatsApp
-                </a>
-            </div>
-        </div>
-    </div>
-
     <div class="marquee">
         <div class="marquee-content">
             <span>⚡ THE DRIP IS REAL • SL PHONE HUB • UNLOCK THE NEXT LEVEL • 100% CERTIFIED • NO FAKES, JUST FLEX • WATTALA SHOWROOM • +94 75 250 0097 • 💎</span>
@@ -614,9 +587,8 @@
                     const displayItems = [...trending, ...trending];
                     track.innerHTML = displayItems.map(p => {
                         const imageUrl = getImageUrl(p.cover);
-                        const pData = JSON.stringify(p).replace(/'/g, "\\'");
                         return `
-                        <div class="trending-card" onclick='showPopup(${pData})'>
+                        <div class="trending-card" onclick="window.location.href='product.html?id=${p.id}'">
                             <img class="trending-img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/100'">
                             <div class="trending-info">
                                 <h5 class="trending-name">${p.name}</h5>
@@ -659,9 +631,8 @@
 
         function renderProductCard(p) {
             const imageUrl = getImageUrl(p.cover);
-            const pData = JSON.stringify(p).replace(/'/g, "\\'");
             return `
-            <div class="glass-panel product-card" onclick='showPopup(${pData})'>
+            <div class="glass-panel product-card" onclick="window.location.href='product.html?id=${p.id}'">
                 <div class="product-card__media">
                     <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
                 </div>
@@ -814,53 +785,6 @@
             renderProducts();
         }
 
-        function showPopup(p) {
-            console.log("🔍 Opening product:", p);
-            const mainImg = document.getElementById('modalMainImg');
-            const galleryDiv = document.getElementById('modalGallery');
-            
-            const coverUrl = getImageUrl(p.cover);
-            mainImg.src = coverUrl;
-            galleryDiv.innerHTML = ""; 
-            
-            const thumbCover = document.createElement('img');
-            thumbCover.src = coverUrl;
-            thumbCover.className = 'thumb-img';
-            thumbCover.onclick = () => { mainImg.src = coverUrl; };
-            galleryDiv.appendChild(thumbCover);
-
-            if (p.allImages && Array.isArray(p.allImages)) {
-                p.allImages.forEach(imgUrl => {
-                    const fullUrl = getImageUrl(imgUrl);
-                    if (fullUrl === coverUrl) return; // Skip if it's the cover
-                    const thumb = document.createElement('img');
-                    thumb.src = fullUrl;
-                    thumb.className = 'thumb-img';
-                    thumb.onclick = () => { mainImg.src = fullUrl; };
-                    galleryDiv.appendChild(thumb);
-                });
-            }
-
-            document.getElementById('modalBrand').innerText = p.brand;
-            document.getElementById('modalName').innerText = p.name;
-            document.getElementById('modalPrice').innerText = "Rs. " + Number(p.price).toLocaleString();
-            document.getElementById('modalCondition').innerText = p.condition;
-            document.getElementById('modalStorage').innerText = p.storage;
-            document.getElementById('modalDesc').innerText = p.description || "Premium device certified by SL Phone Hub.";
-            document.getElementById('modalSpecs').innerText = p.specs || "Contact us for detailed specifications.";
-            
-            const msg = `Hi SL Phone Hub! 👋 \n\nI'm interested in the ${p.name} (Rs. ${Number(p.price).toLocaleString()}). \n\nIs it still available?`;
-            document.getElementById('modalWA').href = `https://wa.me/94752500097?text=${encodeURIComponent(msg)}`;
-            
-            document.getElementById('productModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePopup() {
-            document.getElementById('productModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
         // 4. TESTIMONIALS
         const reviewData = [
             { name: "Sahan P.", text: "Very friendly and reliable service! 🙌 I even got a rare phone I couldn't find anywhere else. Highly recommended! ⭐⭐⭐⭐⭐", style: "style-dark" },
@@ -883,10 +807,6 @@
                         <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
                     </div>
                 </div>`).join('');
-        }
-
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('productModal')) closePopup();
         }
 
         // 5. ANIMATIONS ON SCROLL

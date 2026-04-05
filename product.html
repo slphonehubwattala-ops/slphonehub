@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Product Details | SL Phone Hub</title>
+    <link rel="stylesheet" href="css/style.css?v=2.1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .product-page {
+            padding-top: 180px;
+            padding-bottom: 80px;
+            min-height: 100vh;
+        }
+        .product-container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 50px;
+            align-items: start;
+        }
+        @media (max-width: 992px) {
+            .product-container { grid-template-columns: 1fr; gap: 30px; }
+            .product-page { padding-top: 140px; }
+        }
+        
+        /* Image Gallery */
+        .main-img-container {
+            width: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            background: #0a0a0a;
+            border: 1px solid var(--glass-border);
+            aspect-ratio: 4 / 5;
+        }
+        .main-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+        }
+        .thumbs-grid {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        .thumb-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            background: #0a0a0a;
+            flex-shrink: 0;
+            transition: 0.2s;
+        }
+        .thumb-item:hover, .thumb-item.active {
+            border-color: var(--accent);
+        }
+
+        /* Content Info */
+        .product-info h1 {
+            font-size: 2.5rem;
+            margin: 10px 0;
+            text-align: left;
+        }
+        .price-tag {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin: 20px 0;
+        }
+        .badge-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .info-badge {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+        .info-badge i { color: var(--accent); margin-right: 5px; }
+
+        .description-box {
+            margin-top: 30px;
+            padding: 25px;
+            background: var(--glass);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+        .description-box h3 { margin-bottom: 15px; font-size: 1.1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        .description-text { color: var(--text-sub); line-height: 1.7; white-space: pre-line; }
+
+        .specs-table {
+            margin-top: 30px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .specs-table tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .specs-table td { padding: 12px 0; font-size: 0.9rem; }
+        .specs-label { color: var(--text-sub); font-weight: 500; width: 140px; }
+        .specs-value { color: white; font-weight: 600; }
+
+        .whatsapp-buy-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #25d366;
+            color: white;
+            padding: 18px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-top: 40px;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);
+        }
+        .whatsapp-buy-btn:hover {
+            background: #1eb954;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(37, 211, 102, 0.3);
+        }
+
+        .breadcrumb { margin-bottom: 20px; color: var(--text-sub); font-size: 0.9rem; }
+        .breadcrumb a { color: var(--accent); text-decoration: none; }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 10px;
+        }
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-bg"></div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+           <img src="assets/logo2.jpeg" alt="Logo" id="navLogo">
+           SL Phone <span>HUB</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">🏠 Home</a>
+            <a href="shop.html">🛒 Shop All</a>
+            <a href="index.html#testimonials">⭐ Reviews</a> 
+        </div>
+    </nav>
+
+    <div class="container product-page">
+        <div class="breadcrumb">
+            <a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <span id="breadcrumbName">Product</span>
+        </div>
+
+        <div id="productLoading" style="text-align: center; padding: 100px 0;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--accent);"></i>
+            <p style="margin-top: 20px; color: var(--text-sub);">Loading product details...</p>
+        </div>
+
+        <div id="productError" style="display: none; text-align: center; padding: 100px 0;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444;"></i>
+            <h2 style="margin-top: 20px;">Product Not Found</h2>
+            <p style="color: var(--text-sub); margin-bottom: 30px;">The device you're looking for might have been sold or removed.</p>
+            <a href="shop.html" class="cta-btn" style="text-decoration: none;">Back to Shop</a>
+        </div>
+
+        <div id="productContent" class="product-container" style="display: none;">
+            <!-- Left: Images -->
+            <div class="product-gallery">
+                <div class="main-img-container glass-panel">
+                    <img id="mainImg" class="main-img" src="" alt="">
+                </div>
+                <div id="thumbs" class="thumbs-grid">
+                    <!-- Thumbs injected here -->
+                </div>
+            </div>
+
+            <!-- Right: Info -->
+            <div class="product-info">
+                <div class="badge-row">
+                    <span id="pBrand" class="info-badge"></span>
+                    <span id="pCondition" class="info-badge"></span>
+                </div>
+                <h1 id="pName"></h1>
+                <div id="pPrice" class="price-tag"></div>
+                
+                <table class="specs-table">
+                    <tr>
+                        <td class="specs-label"><i class="fas fa-microchip"></i> Storage</td>
+                        <td id="pStorage" class="specs-value"></td>
+                    </tr>
+                    <tr>
+                        <td class="specs-label"><i class="fas fa-check-circle"></i> Availability</td>
+                        <td id="pStock" class="specs-value"></td>
+                    </tr>
+                </table>
+
+                <a href="#" id="pWhatsApp" target="_blank" class="whatsapp-buy-btn">
+                    <i class="fab fa-whatsapp"></i> Buy via WhatsApp
+                </a>
+
+                <div class="description-box">
+                    <h3>Description</h3>
+                    <p id="pDesc" class="description-text"></p>
+                </div>
+
+                <div class="description-box" id="specsBox">
+                    <h3>Technical Specifications</h3>
+                    <p id="pSpecs" class="description-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="padding: 60px 0; text-align: center; border-top: 1px solid var(--glass-border);">
+        <p>© 2026 SL Phone Hub. Crafted for Excellence.</p>
+    </footer>
+
+    <script>
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
+        const API_URL = `${API_BASE_URL}/api`;
+
+        function getImageUrl(path) {
+            if (!path) return 'https://via.placeholder.com/600x800?text=No+Image';
+            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            let normalizedPath = path.startsWith('/') ? path : '/' + path;
+            if (normalizedPath.startsWith('/uploads/')) return `${API_BASE_URL}${normalizedPath}`;
+            return `${API_BASE_URL}/uploads${normalizedPath}`;
+        }
+
+        async function loadProduct() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            if (!productId) {
+                showError();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/phones`);
+                const data = await res.json();
+                const products = data.items || [];
+                const product = products.find(p => p.id === productId);
+
+                if (!product) {
+                    showError();
+                    return;
+                }
+
+                renderProduct(product);
+            } catch (e) {
+                console.error("Failed to load product:", e);
+                showError();
+            }
+        }
+
+        function renderProduct(p) {
+            document.title = `${p.name} | SL Phone Hub`;
+            document.getElementById('breadcrumbName').innerText = p.name;
+            
+            // Images
+            const coverUrl = getImageUrl(p.cover);
+            const mainImg = document.getElementById('mainImg');
+            mainImg.src = coverUrl;
+            mainImg.alt = p.name;
+
+            const thumbsDiv = document.getElementById('thumbs');
+            thumbsDiv.innerHTML = `<img src="${coverUrl}" class="thumb-item active" onclick="updateMainImg(this, '${coverUrl}')">`;
+            
+            if (p.allImages) {
+                let images = [];
+                try {
+                    images = typeof p.allImages === 'string' ? JSON.parse(p.allImages) : p.allImages;
+                } catch(e) { images = []; }
+
+                images.forEach(imgUrl => {
+                    const fullUrl = getImageUrl(imgUrl);
+                    if (fullUrl !== coverUrl) {
+                        thumbsDiv.innerHTML += `<img src="${fullUrl}" class="thumb-item" onclick="updateMainImg(this, '${fullUrl}')">`;
+                    }
+                });
+            }
+
+            // Info
+            document.getElementById('pBrand').innerHTML = `<i class="fas fa-tag"></i> ${p.brand}`;
+            document.getElementById('pCondition').innerHTML = `<i class="fas fa-star"></i> ${p.condition}`;
+            document.getElementById('pName').innerText = p.name;
+            document.getElementById('pPrice').innerText = "Rs. " + Number(p.price).toLocaleString();
+            document.getElementById('pStorage').innerText = p.storage || "N/A";
+            document.getElementById('pStock').innerText = p.inStock ? "In Stock ✅" : "Out of Stock ❌";
+            document.getElementById('pDesc').innerText = p.description || "Premium certified device from SL Phone Hub.";
+            
+            if (p.specs) {
+                document.getElementById('pSpecs').innerText = p.specs;
+            } else {
+                document.getElementById('specsBox').style.display = 'none';
+            }
+
+            // WhatsApp Link
+            const msg = `Hi SL Phone Hub! 👋 \n\nI'm interested in the ${p.name} (Rs. ${Number(p.price).toLocaleString()}). \n\nIs it still available?`;
+            document.getElementById('pWhatsApp').href = `https://wa.me/94752500097?text=${encodeURIComponent(msg)}`;
+
+            // Toggle visibility
+            document.getElementById('productLoading').style.display = 'none';
+            document.getElementById('productContent').style.display = 'grid';
+        }
+
+        function updateMainImg(el, url) {
+            document.getElementById('mainImg').src = url;
+            document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function showError() {
+            document.getElementById('productLoading').style.display = 'none';
+            document.getElementById('productError').style.display = 'block';
+        }
+
+        loadProduct();
+    </script>
+</body>
+</html>
