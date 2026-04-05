@@ -238,17 +238,45 @@
             background: rgba(249, 115, 22, 0.1);
             color: var(--accent);
             border: 1px solid var(--accent);
-            padding: 6px 15px;
+            padding: 8px 20px;
             border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.8rem;
+            font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
         }
         .view-all-btn:hover {
             background: var(--accent);
             color: white;
-            transform: translateX(5px);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px var(--accent-glow);
+        }
+
+        @media (max-width: 768px) {
+            .section-header {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 20px !important;
+            }
+            .view-all-btn {
+                width: 80%;
+                margin: 10px auto 0;
+                transform: none !important;
+            }
+            .view-all-btn:hover {
+                transform: scale(1.02) !important;
+            }
+            .arrivals-heading {
+                margin-bottom: 20px !important;
+            }
+            .arrivals-heading::after {
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+            }
         }
 
         /* SECTION ENHANCEMENTS */
@@ -381,7 +409,7 @@
 
     <!-- NEW CONDITION-BASED SECTIONS -->
     <section class="container section-fade" id="brand-new-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Brand New Collection ✨</h2>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">SEALED PACKS</span>
@@ -394,7 +422,7 @@
     </section>
 
     <section class="container section-fade" id="used-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Pre-Owned Gems 💎</h2>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">BEST VALUE</span>
@@ -407,7 +435,7 @@
     </section>
 
     <section class="container section-fade" id="refurbished-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Certified Refurbished 🛠️</h2>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid #8b5cf6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">RESTORED TO GLORY</span>
