@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shop All Products | SL Phone Hub</title>
+    <link rel="stylesheet" href="css/style.css?v=2.1">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* Re-using modal and grid styles from index.html */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .details-content {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 40px;
+            color: white;
+        }
+        @media (max-width: 768px) {
+            .details-content { grid-template-columns: 1fr; padding: 16px 12px; }
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: none; border: none;
+            color: white; font-size: 1.5rem; cursor: pointer;
+            z-index: 10;
+        }
+        .details-img {
+            width: 100%;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            height: 400px;
+            object-fit: cover;
+            object-position: top center;
+        }
+        .spec-list { margin-top: 20px; color: #94a3b8; font-size: 0.9rem; line-height: 1.6; }
+        .whatsapp-btn-modal {
+            display: inline-block;
+            background: #25d366;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 25px;
+            text-align: center;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .whatsapp-btn-modal:hover { background: #1eb954; transform: translateY(-2px); }
+        .product-card { cursor: pointer; transition: 0.3s; }
+        .product-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .thumb-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; }
+        .thumb-img { 
+            width: 70px; height: 70px; object-fit: cover; border-radius: 8px; 
+            cursor: pointer; border: 2px solid transparent; flex-shrink: 0;
+        }
+        .thumb-img:hover { border-color: var(--accent); }
+
+        .cat-filter {
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+            background: var(--glass);
+        }
+        .cat-filter.active {
+            background: var(--accent) !important;
+            border-color: var(--accent);
+        }
+
+        .shop-header {
+            padding-top: 140px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .shop-header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+        .shop-header p {
+            color: var(--text-sub);
+            font-size: 1.1rem;
+        }
+        .filters-container {
+            margin-bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        #searchInput {
+            max-width: 600px;
+            width: 100%;
+            padding: 15px 25px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            color: white;
+            font-family: inherit;
+        }
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.2);
+        }
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+        .breadcrumb a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-bg"></div>
+
+    <div class="modal-overlay" id="productModal">
+        <div class="details-content glass-panel">
+            <button class="close-modal" onclick="closePopup()">×</button>
+            <div id="modalLeft">
+                <img id="modalMainImg" class="details-img" src="">
+                <div id="modalGallery" class="thumb-row"></div>
+            </div>
+            <div>
+                <span id="modalBrand" style="color:var(--accent); text-transform:uppercase; font-size:0.75rem; font-weight:700;"></span>
+                <h2 id="modalName" style="margin: 10px 0; font-size: 2rem;"></h2>
+                <div id="modalPrice" style="font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 20px;"></div>
+                <div class="spec-list">
+                    <p><strong>Condition:</strong> <span id="modalCondition"></span></p>
+                    <p><strong>Storage:</strong> <span id="modalStorage"></span></p>
+                    <p><strong>Description:</strong></p>
+                    <p id="modalDesc" style="margin-bottom: 15px;"></p>
+                    <hr style="opacity:0.1; margin: 20px 0;">
+                    <p><strong>Technical Specs:</strong></p>
+                    <p id="modalSpecs" style="white-space: pre-line;"></p>
+                </div>
+                <a href="#" id="modalWA" target="_blank" class="whatsapp-btn-modal">
+                    <i class="fab fa-whatsapp"></i> Order via WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <a href="index.html" class="logo">
+           <img src="assets/logo2.jpeg" alt="Logo" id="navLogo">
+           SL Phone <span>HUB</span>
+        </a>
+        <div class="nav-links">
+            <a href="index.html">🏠 Home</a>
+            <a href="index.html#testimonials">⭐ Reviews</a> 
+            <a href="index.html#why-us">🛡️ Why Us</a>
+        </div>
+    </nav>
+
+    <div class="container shop-header">
+        <div class="breadcrumb">
+            <a href="index.html">Home</a> / <span id="breadcrumbCurrent">Shop All</span>
+        </div>
+        <h1 id="shopTitle">Our Collection 📱</h1>
+        <p id="shopSubtitle">Explore our premium selection of certified mobile devices.</p>
+    </div>
+
+    <section class="container" id="shop">
+        <div class="filters-container">
+            <input type="text" id="searchInput" placeholder="Search by model or brand...">
+            <div class="tabs-container">
+                <div class="tabs" style="display: inline-flex; gap: 10px; overflow-x: auto; width: 100%; padding: 5px;">
+                    <button class="cat-filter active" data-cat="all">🌐 All</button>
+                    <button class="cat-filter" data-cat="Smartphones">📱 Smartphones</button>
+                    <button class="cat-filter" data-cat="Classic Phones">☎️ Classics</button>
+                    <button class="cat-filter" data-cat="Smart Watches">⌚ Watches</button>
+                    <button class="cat-filter" data-cat="Accessories">🎧 Accessories</button>
+                    <button class="cat-filter" data-cat="Repair Parts">🛠️ Parts</button>
+                    <button class="cat-filter" data-cat="Tablets">📟 Tablets</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="productGrid" class="product-grid">
+            <!-- Products injected here -->
+        </div>
+        <div id="pagination" class="pagination-container"></div>
+    </section>
+
+    <footer style="margin-top: 100px; padding: 40px; text-align: center; border-top: 1px solid var(--glass-border);">
+        <p>© 2026 SL Phone Hub. Crafted for Excellence.</p>
+    </footer>
+
+    <script>
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const API_BASE_URL = isLocal ? "http://localhost:3000" : "https://api.slphonehub.com";
+        const API_URL = `${API_BASE_URL}/api`;
+
+        let allProducts = [];
+        let filteredProducts = [];
+        let activeCategory = 'all';
+        let activeCondition = 'all';
+        let currentPage = 1;
+        const itemsPerPage = 12;
+
+        // Parse URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        activeCondition = urlParams.get('condition') || 'all';
+        activeCategory = urlParams.get('category') || 'all';
+
+        // Update UI based on parameters
+        if (activeCondition !== 'all') {
+            document.getElementById('shopTitle').innerText = `${activeCondition} Collection`;
+            document.getElementById('breadcrumbCurrent').innerText = activeCondition;
+        }
+
+        function getImageUrl(path) {
+            if (!path) return 'https://via.placeholder.com/300';
+            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            let normalizedPath = path.startsWith('/') ? path : '/' + path;
+            if (normalizedPath.startsWith('/uploads/')) return `${API_BASE_URL}${normalizedPath}`;
+            return `${API_BASE_URL}/uploads${normalizedPath}`;
+        }
+
+        async function loadProducts() {
+            try {
+                const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
+                if (!res.ok) throw new Error("Server response not OK");
+                const data = await res.json();
+                allProducts = data.items || [];
+                applyFilters();
+            } catch (e) {
+                console.error("Failed to load products:", e);
+                document.getElementById('productGrid').innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products. Please try again later.</p>";
+            }
+        }
+
+        function applyFilters() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            filteredProducts = allProducts.filter(p => {
+                const matchesSearch = (p.name || '').toLowerCase().includes(term) || (p.brand || '').toLowerCase().includes(term);
+                const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+                const matchesCondition = activeCondition === 'all' || p.condition === activeCondition;
+                return matchesSearch && matchesCategory && matchesCondition;
+            });
+            currentPage = 1;
+            renderProducts();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('productGrid');
+            if(!grid) return;
+            
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>No products found matching your filters.</p>";
+                renderPagination(0);
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = filteredProducts.slice(startIndex, endIndex);
+
+            grid.innerHTML = paginatedItems.map(p => {
+                const imageUrl = getImageUrl(p.cover);
+                const pData = JSON.stringify(p).replace(/'/g, "\\'");
+                return `
+                <div class="glass-panel product-card" onclick='showPopup(${pData})'>
+                    <div class="product-card__media">
+                        <img class="product-card__img" src="${imageUrl}" loading="lazy" alt="${p.name}" onerror="this.src='https://via.placeholder.com/300'">
+                    </div>
+                    <div class="product-card__body">
+                        <span class="product-card__brand">${p.brand}</span>
+                        <h4 class="product-card__title">${p.name}</h4>
+                        <p class="product-card__specs">${p.storage} • ${p.condition}</p>
+                        <div class="product-card__price">Rs. ${Number(p.price).toLocaleString()}</div>
+                    </div>
+                </div>`;
+            }).join('');
+            renderPagination(filteredProducts.length);
+        }
+
+        function renderPagination(totalItems) {
+            const paginationContainer = document.getElementById('pagination');
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            if (totalPages <= 1) { paginationContainer.innerHTML = ""; return; }
+
+            let html = `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>`;
+            paginationContainer.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderProducts();
+            window.scrollTo({ top: 400, behavior: 'smooth' });
+        }
+
+        // Event Listeners
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.querySelectorAll('.cat-filter').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.cat-filter').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeCategory = btn.dataset.cat;
+                applyFilters();
+            });
+            // Initial active state
+            if(btn.dataset.cat === activeCategory) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+
+        function showPopup(p) {
+            const mainImg = document.getElementById('modalMainImg');
+            const galleryDiv = document.getElementById('modalGallery');
+            const coverUrl = getImageUrl(p.cover);
+            mainImg.src = coverUrl;
+            galleryDiv.innerHTML = `<img src="${coverUrl}" class="thumb-img" onclick="document.getElementById('modalMainImg').src='${coverUrl}'">`;
+            if (p.allImages && Array.isArray(p.allImages)) {
+                p.allImages.forEach(imgUrl => {
+                    const fullUrl = getImageUrl(imgUrl);
+                    if (fullUrl !== coverUrl) {
+                        galleryDiv.innerHTML += `<img src="${fullUrl}" class="thumb-img" onclick="document.getElementById('modalMainImg').src='${fullUrl}'">`;
+                    }
+                });
+            }
+            document.getElementById('modalBrand').innerText = p.brand;
+            document.getElementById('modalName').innerText = p.name;
+            document.getElementById('modalPrice').innerText = "Rs. " + Number(p.price).toLocaleString();
+            document.getElementById('modalCondition').innerText = p.condition;
+            document.getElementById('modalStorage').innerText = p.storage;
+            document.getElementById('modalDesc').innerText = p.description || "Premium device certified by SL Phone Hub.";
+            document.getElementById('modalSpecs').innerText = p.specs || "Contact us for detailed specifications.";
+            const msg = `Hi SL Phone Hub! 👋 \n\nI'm interested in the ${p.name}. \n\nIs it still available?`;
+            document.getElementById('modalWA').href = `https://wa.me/94752500097?text=${encodeURIComponent(msg)}`;
+            document.getElementById('productModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePopup() {
+            document.getElementById('productModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        window.onclick = (e) => { if (e.target == document.getElementById('productModal')) closePopup(); };
+        loadProducts();
+    </script>
+</body>
+</html>

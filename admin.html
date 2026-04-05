@@ -335,64 +335,71 @@
             btn.disabled = true;
             btn.innerText = "Syncing with Cloud...";
 
-            try {
-                // Don't re-convert everything to Base64 if we are just editing.
-                // Only new images (from handlePImages) will be Base64.
-                // Existing images from the server will be paths like /uploads/...
-                
-                const prod = {
-                    name,
-                    brand: document.getElementById('pBrand').value || '',
-                    price: Number(price) || 0,
-                    category: document.getElementById('pCat').value || 'Smartphones',
-                    condition: document.getElementById('pCond').value || 'Brand New',
-                    storage: document.getElementById('pStorage').value || 'Standard',
-                    stock: Number(document.getElementById('pStock').value) || 1,
-                    description: document.getElementById('pDesc').value || '',
-                    specs: document.getElementById('pSpecs').value || '',
-                    inStock: document.getElementById('pInStock').checked,
-                    featured: document.getElementById('pFeatured').checked,
-                    trending: document.getElementById('pTrending').checked,
-                    cover: productImages[coverIdx] || productImages[0] || '',
-                    allImages: productImages
-                };
+            const attemptSave = async (retryCount = 0) => {
+                try {
+                    const prod = {
+                        name,
+                        brand: document.getElementById('pBrand').value || '',
+                        price: Number(price) || 0,
+                        category: document.getElementById('pCat').value || 'Smartphones',
+                        condition: document.getElementById('pCond').value || 'Brand New',
+                        storage: document.getElementById('pStorage').value || 'Standard',
+                        stock: Number(document.getElementById('pStock').value) || 1,
+                        description: document.getElementById('pDesc').value || '',
+                        specs: document.getElementById('pSpecs').value || '',
+                        inStock: document.getElementById('pInStock').checked,
+                        featured: document.getElementById('pFeatured').checked,
+                        trending: document.getElementById('pTrending').checked,
+                        cover: productImages[coverIdx] || productImages[0] || '',
+                        allImages: productImages
+                    };
 
-                const url = editId
-                    ? `${API_BASE_URL}/api/phones/${encodeURIComponent(editId)}`
-                    : `${API_BASE_URL}/api/phones`;
-                const method = editId ? "PUT" : "POST";
+                    const url = editId
+                        ? `${API_BASE_URL}/api/phones/${encodeURIComponent(editId)}`
+                        : `${API_BASE_URL}/api/phones`;
+                    const method = editId ? "PUT" : "POST";
 
-                const res = await fetch(url, {
-                    method,
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${adminToken}`
-                    },
-                    body: JSON.stringify(prod)
-                });
+                    const res = await fetch(url, {
+                        method,
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${adminToken}`
+                        },
+                        body: JSON.stringify(prod)
+                    });
 
-                const data = await res.json().catch(() => ({}));
-                console.log("Server Response:", data);
-                
-                if (res.status === 401) {
-                    alert("Session expired. Please log in again.");
-                    logout();
-                    return;
+                    if (res.status === 401) {
+                        alert("Session expired. Please log in again.");
+                        logout();
+                        return;
+                    }
+
+                    if (res.status === 429) {
+                        alert("Too many requests! Please wait a moment.");
+                        btn.disabled = false;
+                        btn.innerText = "Save Product";
+                        return;
+                    }
+
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) throw new Error(data.error || data.message || "Request failed");
+
+                    alert("Product saved successfully!");
+                    location.reload();
+                } catch (e) {
+                    if (retryCount < 2) {
+                        console.log(`Retrying save... attempt ${retryCount + 1}`);
+                        setTimeout(() => attemptSave(retryCount + 1), 1500);
+                    } else {
+                        console.error("Save Error:", e);
+                        alert("Error: " + e.message);
+                        btn.disabled = false;
+                        btn.innerText = "Save Product";
+                    }
                 }
+            };
 
-                if (!res.ok) {
-                    const errorMsg = data.error || data.message || "Request failed";
-                    throw new Error(errorMsg);
-                }
-
-                alert("Product saved successfully!");
-                location.reload();
-            } catch (e) {
-                console.error("Save Error:", e);
-                alert("Error: " + e.message);
-                btn.disabled = false;
-                btn.innerText = "Save Product";
-            }
+            attemptSave();
         }
 
         async function deleteItem(collection, id) {

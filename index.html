@@ -234,6 +234,23 @@
             font-weight: 600;
         }
 
+        .view-all-btn {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .view-all-btn:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateX(5px);
+        }
+
         /* SECTION ENHANCEMENTS */
         .section-fade {
             opacity: 0;
@@ -339,6 +356,7 @@
            SL Phone <span>HUB</span>
         </a>
         <div class="nav-links">
+            <a href="shop.html">🛒 Shop All</a>
             <a href="#arrivals">📦 Arrivals</a>
             <a href="#testimonials">⭐ Reviews</a> 
             <a href="#why-us">🛡️ Why Us</a>
@@ -390,7 +408,10 @@
     <section class="container section-fade" id="brand-new-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Brand New Collection ✨</h2>
-            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">SEALED PACKS</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">SEALED PACKS</span>
+                <button class="view-all-btn" onclick="viewAllByCondition('Brand New')" id="viewAllBrandNew" style="display: none;">View All →</button>
+            </div>
         </div>
         <div id="brandNewGrid" class="product-grid">
             <!-- Brand new products injected here -->
@@ -400,7 +421,10 @@
     <section class="container section-fade" id="used-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Pre-Owned Gems 💎</h2>
-            <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">BEST VALUE</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">BEST VALUE</span>
+                <button class="view-all-btn" onclick="viewAllByCondition('Used')" id="viewAllUsed" style="display: none;">View All →</button>
+            </div>
         </div>
         <div id="usedGrid" class="product-grid">
             <!-- Used products injected here. -->
@@ -410,7 +434,10 @@
     <section class="container section-fade" id="refurbished-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="arrivals-heading" style="margin-bottom: 0;">Certified Refurbished 🛠️</h2>
-            <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid #8b5cf6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">RESTORED TO GLORY</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <span class="badge" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid #8b5cf6; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;">RESTORED TO GLORY</span>
+                <button class="view-all-btn" onclick="viewAllByCondition('Refurbished')" id="viewAllRefurbished" style="display: none;">View All →</button>
+            </div>
         </div>
         <div id="refurbishedGrid" class="product-grid">
             <!-- Refurbished products injected here. -->
@@ -558,14 +585,18 @@
         async function loadProducts() {
             try {
                 const res = await fetch(`${API_URL}/phones?category=all&limit=500&offset=0`);
+                if (!res.ok) throw new Error("Server response not OK");
                 const data = await res.json();
                 allProducts = data.items || [];
                 applyFilters();
                 loadTrendingProducts(); // Load trending products when main products are loaded
             } catch (e) {
-                console.error("Failed to load products:", e);
+                console.error("Failed to load products, retrying in 2s...", e);
                 const grid = document.getElementById('productGrid');
-                if (grid) grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Could not load products.</p>";
+                if (grid && allProducts.length === 0) {
+                    grid.innerHTML = "<p style='color:gray; text-align:center; grid-column:1/-1;'>Connection lost. Reconnecting...</p>";
+                }
+                setTimeout(loadProducts, 2000); // Retry every 2 seconds if it fails
             }
         }
 
@@ -650,11 +681,15 @@
 
             if (brandNewGrid) {
                 try {
-                    const res = await fetch(`${API_URL}/phones?condition=Brand New&limit=4`);
+                    const res = await fetch(`${API_URL}/phones?condition=Brand New&limit=5`);
                     const data = await res.json();
                     const brandNewProds = data.items || [];
-                    brandNewGrid.innerHTML = brandNewProds.length > 0 
-                        ? brandNewProds.map(p => renderProductCard(p)).join('')
+                    const hasMore = (data.total || brandNewProds.length) > 4;
+                    document.getElementById('viewAllBrandNew').style.display = hasMore ? 'block' : 'none';
+                    
+                    const displayProds = brandNewProds.slice(0, 4);
+                    brandNewGrid.innerHTML = displayProds.length > 0 
+                        ? displayProds.map(p => renderProductCard(p)).join('')
                         : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
                 } catch (e) {
                     console.error("Failed to load brand new products:", e);
@@ -663,11 +698,15 @@
 
             if (usedGrid) {
                 try {
-                    const res = await fetch(`${API_URL}/phones?condition=Used&limit=4`);
+                    const res = await fetch(`${API_URL}/phones?condition=Used&limit=5`);
                     const data = await res.json();
                     const usedProds = data.items || [];
-                    usedGrid.innerHTML = usedProds.length > 0 
-                        ? usedProds.map(p => renderProductCard(p)).join('')
+                    const hasMore = (data.total || usedProds.length) > 4;
+                    document.getElementById('viewAllUsed').style.display = hasMore ? 'block' : 'none';
+
+                    const displayProds = usedProds.slice(0, 4);
+                    usedGrid.innerHTML = displayProds.length > 0 
+                        ? displayProds.map(p => renderProductCard(p)).join('')
                         : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
                 } catch (e) {
                     console.error("Failed to load used products:", e);
@@ -676,16 +715,24 @@
 
             if (refurbishedGrid) {
                 try {
-                    const res = await fetch(`${API_URL}/phones?condition=Refurbished&limit=4`);
+                    const res = await fetch(`${API_URL}/phones?condition=Refurbished&limit=5`);
                     const data = await res.json();
                     const refurbishedProds = data.items || [];
-                    refurbishedGrid.innerHTML = refurbishedProds.length > 0 
-                        ? refurbishedProds.map(p => renderProductCard(p)).join('')
+                    const hasMore = (data.total || refurbishedProds.length) > 4;
+                    document.getElementById('viewAllRefurbished').style.display = hasMore ? 'block' : 'none';
+
+                    const displayProds = refurbishedProds.slice(0, 4);
+                    refurbishedGrid.innerHTML = displayProds.length > 0 
+                        ? displayProds.map(p => renderProductCard(p)).join('')
                         : "<p style='color:gray; text-align:center; grid-column:1/-1;'>Coming soon...</p>";
                 } catch (e) {
                     console.error("Failed to load refurbished products:", e);
                 }
             }
+        }
+
+        function viewAllByCondition(condition) {
+            window.location.href = `shop.html?condition=${encodeURIComponent(condition)}`;
         }
 
         function renderPagination(totalItems) {
