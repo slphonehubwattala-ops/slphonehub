@@ -94,13 +94,16 @@
         }
 
         .shop-header {
-            padding-top: 180px; /* Increased to avoid floating bar overlap */
             text-align: center;
             margin-bottom: 60px;
         }
         .shop-header h1 {
-            font-size: 3rem;
+            font-size: 4rem; /* Big letters for the topic */
             margin-bottom: 10px;
+            font-weight: 700;
+        }
+        @media (max-width: 768px) {
+            .shop-header h1 { font-size: 2.5rem; }
         }
         .shop-header p {
             color: var(--text-sub);
@@ -139,7 +142,7 @@
         }
     </style>
 </head>
-<body>
+<body class="has-navbar">
     <div class="glass-bg"></div>
 
     <nav class="navbar">

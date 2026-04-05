@@ -68,21 +68,30 @@ body {
 /* --- NAVBAR --- */
 .navbar {
     position: fixed; 
-    top: 60px; 
+    top: 20px; /* Reduced from 60px to give more space below */
     left: 50%; 
     transform: translateX(-50%);
     width: 90%; 
     max-width: 1000px; 
     padding: 12px 30px;
-    background: rgba(3, 7, 18, 0.8); 
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(3, 7, 18, 0.85); 
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
     border: 1px solid var(--glass-border); 
     border-radius: 100px;
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    z-index: 1000;
+    z-index: 2000; /* Higher than marquee */
+}
+
+/* Global Page Padding to avoid Navbar overlap */
+body.has-navbar {
+    padding-top: 120px;
+}
+@media (max-width: 768px) {
+    body.has-navbar { padding-top: 100px; }
+    .navbar { top: 15px; padding: 10px 20px; width: 95%; }
 }
 
 .logo { 

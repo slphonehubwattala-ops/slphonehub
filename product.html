@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         .product-page {
-            padding-top: 180px;
             padding-bottom: 80px;
             min-height: 100vh;
         }
@@ -21,7 +20,6 @@
         }
         @media (max-width: 992px) {
             .product-container { grid-template-columns: 1fr; gap: 30px; }
-            .product-page { padding-top: 140px; }
         }
         
         /* Image Gallery */
@@ -63,9 +61,14 @@
 
         /* Content Info */
         .product-info h1 {
-            font-size: 2.5rem;
+            font-size: 3.5rem; /* Increased from 2.5rem for "bigg leeters" */
             margin: 10px 0;
             text-align: left;
+            line-height: 1.1;
+            font-weight: 700;
+        }
+        @media (max-width: 768px) {
+            .product-info h1 { font-size: 2.2rem; }
         }
         .price-tag {
             font-size: 2rem;
@@ -147,7 +150,7 @@
         }
     </style>
 </head>
-<body>
+<body class="has-navbar">
     <div class="glass-bg"></div>
 
     <nav class="navbar">
