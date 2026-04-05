@@ -68,7 +68,7 @@ body {
 /* --- NAVBAR --- */
 .navbar {
     position: fixed; 
-    top: 20px; /* Reduced from 60px to give more space below */
+    top: 55px; /* Just below the marquee, not too far down */
     left: 50%; 
     transform: translateX(-50%);
     width: 90%; 
@@ -83,15 +83,16 @@ body {
     justify-content: space-between; 
     align-items: center; 
     z-index: 2000; /* Higher than marquee */
+    transition: top 0.3s ease;
 }
 
 /* Global Page Padding to avoid Navbar overlap */
 body.has-navbar {
-    padding-top: 120px;
+    padding-top: 130px;
 }
 @media (max-width: 768px) {
-    body.has-navbar { padding-top: 100px; }
-    .navbar { top: 15px; padding: 10px 20px; width: 95%; }
+    body.has-navbar { padding-top: 110px; }
+    .navbar { top: 45px; padding: 10px 20px; width: 95%; }
 }
 
 .logo { 
@@ -133,7 +134,7 @@ body.has-navbar {
     display: flex; 
     align-items: center; 
     justify-content: center; 
-    padding: 120px 20px 60px; 
+    padding: 130px 20px 60px; 
     background: linear-gradient(rgba(3, 7, 18, 0.6), rgba(3, 7, 18, 0.8)), 
                 url('../assets/hero-bg.jpeg'); 
     background-size: cover;
